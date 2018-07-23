@@ -139,7 +139,7 @@ void PythiaGun::Exec()
   INFO<<"Run Hard Process : "<<GetId()<< " ...";
   VERBOSE(8)<<"Current Event #"<<GetCurrentEvent();
   //Reading vir_factor from xml for MATTER
-   tinyxml2::XMLElement *eloss= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" );
+  tinyxml2::XMLElement *eloss= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" );
   if ( !eloss ) {
     WARN << "Couldn't find tag Eloss";
     throw std::runtime_error ("Couldn't find tag Eloss");    
@@ -181,7 +181,7 @@ void PythiaGun::Exec()
       if ( fabs( particle.id() ) > 3 && (particle.id() !=21 && particle.id() !=22) ) continue;
       
       // reject rare cases of very soft particles that don't have enough e to get
-      // reasonable virtuality
+      // reasonable virtuality 
       if ( particle.pT() < 1.0/sqrt(vir_factor) ) continue;
  	
 	//if(particle.id()==22) cout<<"########this is a photon!######" <<endl;
@@ -191,12 +191,12 @@ void PythiaGun::Exec()
     }
 
     // if you want at least 2
-    if ( p62.size() < 2 ) continue;
+    //if ( p62.size() < 2 ) continue;
     //if ( p62.size() < 1 ) continue;
     
     // Now have all candidates, sort them
     // sort by pt
-    std::sort( p62.begin(), p62.end(), greater_than_pt() );
+    //std::sort( p62.begin(), p62.end(), greater_than_pt() );
     // // check...
     // for (auto& p : p62 ) cout << p.pT() << endl;
     
@@ -264,6 +264,7 @@ void PythiaGun::Exec()
     if(particle.id() !=22)
     {
         AddParton(make_shared<Parton>(0, particle.id(),0,particle.pT(),particle.y(),particle.phi(),particle.e(),xLoc) );
+        //AddHadron(make_shared<Hadron>(0, particle.id(),0,particle.pT(),particle.y(),particle.phi(),particle.e(),xLoc) );
     }
     else
     {
@@ -275,5 +276,15 @@ void PythiaGun::Exec()
 
  
   VERBOSE(8)<<GetNHardPartons();
+}
+
+int PythiaGun::GetNum()
+{
+	if (ini)
+	{
+	  auto num_coll = ini->GetNumOfBinaryCollisions(); 
+	  return num_coll.size(); 
+	}
+	else return -1; 
 }
 

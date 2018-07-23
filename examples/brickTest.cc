@@ -35,7 +35,6 @@
 #include "AdSCFT.h"
 #include "Matter.h"
 #include "LBT.h"
-#include "Martini.h"
 #include "Brick.h"
 #include "GubserHydro.h"
 #include "PGun.h"
@@ -80,6 +79,7 @@ int main(int argc, char** argv)
   auto trento = make_shared<TrentoInitial>();
   auto pGun= make_shared<PGun> ();
   auto hydro = make_shared<Brick> ();
+ 
   jetscape->Add(trento);
   jetscape->Add(pGun);
   jetscape->Add(hydro);

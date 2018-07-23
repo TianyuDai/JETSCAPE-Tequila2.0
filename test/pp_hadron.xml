@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+
+<!-- Copyright (c) The JETSCAPE Collaboration, 2018 -->
+<!-- Modular, task-based framework for simulating all aspects of heavy-ion collisions -->
+<!-- For the list of contributors see AUTHORS. -->
+<!-- Report issues at https://github.com/JETSCAPE/JETSCAPE/issues -->
+<!-- or via email to bugs.jetscape@gmail.com -->
+<!-- Distributed under the GNU General Public License 3.0 (GPLv3 or later). -->
+<!-- See COPYING for details. --> 
+
+ <jetscape>
+
+  <debug> on </debug>
+  <remark> off </remark>
+  <vlevel> 0 </vlevel>
+
+  <!--  Random Settings. For now, just a global  seed. -->
+  <!--  Note: It's each modules responsibility to adopt it -->
+  <!--  Note: Most if not all modules should understand 0 to mean a random value -->
+  <!--  Note: Both 0 and non-zero values require careful treatment in case of multi-threading -->
+  <!--           An example implementation is in JetEnergyLossManager.cc -->
+  <Random>
+    <seed>1</seed>
+  </Random>
+
+  <!-- Hard Process -->
+  <Hard>
+
+    <!-- Pythia Gun -->
+    <!-- Sensible defaults are set in the class. ptHat etc. get their own field -->
+    <PythiaGun>
+      <name>PythiaGun</name>
+      <pTHatMin>28</pTHatMin>
+      <pTHatMax>7000</pTHatMax>
+      <eCM>7000</eCM>
+      <!-- You can add any number of additional lines to initialize pythia here -->
+      <!-- Note that if the tag exists it cannot be empty (tinyxml produces a segfault) -->
+      <LinesToRead>
+	PartonLevel:FSR = on
+	HadronLevel:all = on
+	HadronLevel:Decay = on
+	PromptPhoton:all=off
+      </LinesToRead>
+    </PythiaGun>     
+  </Hard>   
+
+</jetscape>

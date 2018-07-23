@@ -13,8 +13,8 @@
  * See COPYING for details.
  ******************************************************************************/
 
-#ifndef MARTINI_H
-#define MARTINI_H
+#ifndef QINGUANGYOU_H
+#define QINGUANGYOU_H
 
 #include <fstream>
 #include <math.h>
@@ -47,7 +47,7 @@ struct RateConversion
   double qgamma;
 };
 
-class Martini : public JetEnergyLossModule<Martini> //, public std::enable_shared_from_this<Martini>
+class QinGuangYou : public JetEnergyLossModule<QinGuangYou> //, public std::enable_shared_from_this<QinGuangYou>
 {  
  private:
 
@@ -58,6 +58,7 @@ class Martini : public JetEnergyLossModule<Martini> //, public std::enable_share
   double alpha_em;
   double g;
   double pcut;        // below this scale, no further Eloss
+  double omega = 0.01; 
 
   //Import.h//
   static const int NP = 230;
@@ -121,13 +122,14 @@ class Martini : public JetEnergyLossModule<Martini> //, public std::enable_share
 
  public:
   
-  Martini();
-  virtual ~Martini();
+  QinGuangYou();
+  virtual ~QinGuangYou();
 
   //main//
   void Init();
   void DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut);
-  int DetermineProcess(double p, double T, double deltaT, int id);
+  int DetermineProcess(double p, double T, double deltaT, int id, int sign);
+  int DetermineSign(double p, double T, int id);
   void WriteTask(weak_ptr<JetScapeWriter> w) {};
   
   //Radiative.h//
@@ -140,22 +142,19 @@ class Martini : public JetEnergyLossModule<Martini> //, public std::enable_share
   double function(double u, double y, int process);
 
   //Elastic.h//
-  RateElastic getRateElasTotal(double p, double T);
-  RateElastic getRateElasPos(double u, double T);
-  RateElastic getRateElasNeg(double u, double T);
+  RateElastic getRateElasTotal(double p, double T, int pn);
+  RateElastic getRateElas(double u, double T);
 
   RateConversion getRateConv(double p, double T);
 
   double getEnergyTransfer(double p, double T, int process);
-  double getMomentumTransfer(double p, double omega, double T, int process);
+  double getMomentumTransfer(double p, double T, int process);
 
   double areaOmega(double u, int posNegSwitch, int process);
-  double areaQ(double u, double omega, int process);
-  double functionOmega(double u, double y, int process) {
-    return getElasticRateOmega(u, y, process);}
-  double functionQ(double u, double omega, double q, int process) {
-    return getElasticRateQ(u, omega, q, process);}
-  Jetscape::FourVector getNewMomentumElas(Jetscape::FourVector pVec, double omega, double q);
+  double areaQ(double u, int process, double T);
+  double functionQ(double u, double q, int process, double T) {
+    return getElasticRateQ(u, q, process, T);}
+  Jetscape::FourVector getNewMomentumElas(Jetscape::FourVector pVec, double q);
 
   //Import.h//
   void readRadiativeRate(Gamma_info *dat, dGammas *Gam);
@@ -168,18 +167,17 @@ class Martini : public JetEnergyLossModule<Martini> //, public std::enable_share
   double getRate_qqgamma(double p, double k);
   double use_table(double p, double k, double dGamma[NP][NK], int which_kind);
 
-  double getElasticRateOmega(double u, double omega, int process);
-  double getElasticRateQ(double u, double omega, double q, int process);
-  double use_elastic_table_omega(double omega, int which_kind);
-  double use_elastic_table_q(double u, double omega, int which_kind);
 
+  double getElasticRateQ(double u, double q, int process, double T);  
+  double use_elastic_table_q(double u, int which_kind, double T);
+  
  protected:
   uniform_real_distribution<double> ZeroOneDistribution;
 
   string PathToTables;
 };
 
-double LambertW(double z);
+double LambertWM(double z);
 
-#endif // MARTINI_H
+#endif // GINGUANGYOU_H
 

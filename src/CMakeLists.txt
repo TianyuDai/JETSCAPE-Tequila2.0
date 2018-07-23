@@ -6,6 +6,10 @@ cmake_policy(SET CMP0042 NEW)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "./lib")
 
+# helloworld
+FILE(GLOB helloworldsources helloworld/*.cc)
+set (SOURCES ${SOURCES} ${helloworldsources})
+
 # framework
 FILE(GLOB frameworksources framework/*.cc)
 set (SOURCES  ${SOURCES}  ${frameworksources} )

@@ -36,7 +36,7 @@
 #include "AdSCFT.h"
 #include "Matter.h"
 #include "LBT.h"
-#include "Martini.h"
+#include "QinGuangYou.h"
 #include "Brick.h"
 #include "GubserHydro.h"
 #include "PythiaGun.h"
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
   
   Show();
 
-  auto jetscape = make_shared<JetScape>("./jetscape_init.xml",200);
+  auto jetscape = make_shared<JetScape>("./jetscape_init.xml",10000);
   jetscape->SetId("primary");
 
   // Initial conditions and hydro
@@ -93,15 +93,12 @@ int main(int argc, char** argv)
   auto jlossmanager = make_shared<JetEnergyLossManager> ();
   auto jloss = make_shared<JetEnergyLoss> ();
 
-  auto matter = make_shared<Matter> ();
-  // auto lbt = make_shared<LBT> ();
-  // auto martini = make_shared<Martini> ();
-  // auto adscft = make_shared<AdSCFT> ();
+  auto qinguangyou = make_shared<QinGuangYou> ();
 
   // Note: if you use Matter, it MUST come first (to set virtuality)
-  jloss->Add(matter);
+  // jloss->Add(matter);
   // jloss->Add(lbt);  // go to 3rd party and ./get_lbtTab before adding this module
-  // jloss->Add(martini);
+  jloss->Add(qinguangyou);
   // jloss->Add(adscft);  
   jlossmanager->Add(jloss);  
   jetscape->Add(jlossmanager);
@@ -111,28 +108,12 @@ int main(int argc, char** argv)
   // This helper module currently needs to be added for hadronization.
   auto printer = make_shared<PartonPrinter> ();
   jetscape->Add(printer);
-  auto hadroMgr = make_shared<HadronizationManager> ();
-  auto hadro = make_shared<Hadronization> ();
-  auto hadroModule = make_shared<ColoredHadronization> ();
-  hadro->Add(hadroModule);
-  // auto colorless = make_shared<ColorlessHadronization> ();
-  // hadro->Add(colorless);
-  hadroMgr->Add(hadro);
-  jetscape->Add(hadroMgr);
 
   
   // Output
-  auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
-  // same as JetScapeWriterAscii but gzipped
-  auto writergz= make_shared<JetScapeWriterAsciiGZ> ("test_out.dat.gz");
-  jetscape->Add(writer);
-  jetscape->Add(writergz);
-  // HEPMC3
-#ifdef USE_HEPMC
-  auto hepmcwriter= make_shared<JetScapeWriterHepMC> ("test_out.hepmc");
-  jetscape->Add(hepmcwriter);
-#endif
-
+  auto writer= make_shared<JetScapeWriterAscii> ("../Result/AA_Eloss/AA_qinguangyou_parton.dat");
+  jetscape->Add(writer); 
+  
   // Intialize all modules tasks
   jetscape->Init();
 
@@ -142,7 +123,8 @@ int main(int argc, char** argv)
   // For the future, cleanup is mostly already done in write and clear
   jetscape->Finish();
   
-  INFO_NICE<<"Finished!";
+  cout<<"The Sigma Gen is "<<pythiaGun->GetSigmaGen()<<" "<<pythiaGun->GetSigmaErr()<<endl; 
+  INFO_NICE<<"Finished!"; 
   cout<<endl;
 
   t = clock() - t;

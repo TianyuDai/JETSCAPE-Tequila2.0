@@ -46,6 +46,7 @@ public:
  
   void InitTask();
   void Exec();
+  int GetNum(); 
 
   // Getters
   double GetpTHatMin() const {return pTHatMin;}

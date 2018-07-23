@@ -253,6 +253,7 @@ include_directories(./src/preequilibrium )
 include_directories(./src/hydro )
 include_directories(./src/hadronization )
 include_directories(./src/jet )
+include_directories(./src/helloworld )
 include_directories(./src/reader )
 include_directories(./external_packages/)
 include_directories(./external_packages/gtl/include )
@@ -329,38 +330,28 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 ###########################
 
 ### Run Jetscape
-add_executable(brickTest ./examples/brickTest.cc)
-target_link_libraries(brickTest JetScape )
 
-add_executable(PythiaBrickTest ./examples/PythiaBrickTest.cc)
-target_link_libraries(PythiaBrickTest JetScape )
+add_executable(PGun_parton ./test/PGun_parton.cc)
+target_link_libraries(PGun_parton JetScape )
 
-add_executable(LBT_brickTest ./examples/LBT_brickTest.cc)
-target_link_libraries(LBT_brickTest JetScape )
-
-if(${HDF5_FOUND})
-  add_executable(hydroFileTest ./examples/hydroFileTest.cc)
-  target_link_libraries(hydroFileTest JetScape ${_hdf5_libs})
+#if(${HDF5_FOUND})
+#  add_executable(hydroFileTest ./examples/hydroFileTest.cc)
+#  target_link_libraries(hydroFileTest JetScape ${_hdf5_libs})
   
-  add_executable(hydroJetTest  ./examples/hydroJetTest.cc)
-  target_link_libraries(hydroJetTest JetScape ${_hdf5_libs})
+#  add_executable(hydroJetTest  ./examples/hydroJetTest.cc)
+#  target_link_libraries(hydroJetTest JetScape ${_hdf5_libs})
 
-  add_executable(hydroJetTestPGun  ./examples/hydroJetTestPGun.cc)
-  target_link_libraries(hydroJetTestPGun JetScape ${_hdf5_libs})
-endif()
+#  add_executable(hydroJetTestPGun  ./examples/hydroJetTestPGun.cc)
+#  target_link_libraries(hydroJetTestPGun JetScape ${_hdf5_libs})
+#endif()
 
-add_executable(SimpleValidate ./examples/SimpleValidate.cc)
-target_link_libraries(SimpleValidate JetScape )
+#add_executable(SimpleValidate ./examples/SimpleValidate.cc)
+#target_link_libraries(SimpleValidate JetScape )
 
 ### Read Jetscape output
-add_executable(readerTest ./examples/readerTest.cc)
-target_link_libraries(readerTest JetScape )
 
-add_executable(FinalStateHadrons ./examples/FinalStateHadrons.cc)
-target_link_libraries(FinalStateHadrons JetScape )
-
-add_executable(FinalStatePartons ./examples/FinalStatePartons.cc)
-target_link_libraries(FinalStatePartons JetScape )
+add_executable(PGun_leading_parton ./test/PGun_leading_parton.cc)
+target_link_libraries(PGun_leading_parton JetScape )
 
 # executables with additional dependencies
 if (freestream AND music)
@@ -388,6 +379,9 @@ endif (music AND iSS )
 # -----------------------------------------------------------
 #### copy jetscape_init.xml to build/, such that one can test xml reading in build/ directory
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/examples/jetscape_init.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/pp_parton.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/pp_hadron.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/PGun_jet_el.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #### copy essential files for MUSIC to build/
 if (freestream)

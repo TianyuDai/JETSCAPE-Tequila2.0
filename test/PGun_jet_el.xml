@@ -38,7 +38,7 @@
     
     <Trento use_module="pre_defined">
       <!-- pre-defined system: default collisions have auau200, pbpb2760, pbpb5020, more in the future -->
-      <pre_defined collision_system="pbpb2760" centrality_min="30" centrality_max="40" />
+      <pre_defined collision_system="auau200" centrality_min="30" centrality_max="40" />
       <!-- user-defined system: to get one event in 0-100% centrality range -->
       <user_defined projectile="Au" target="Au" sqrts="200" cross_section="4.2" />
     </Trento>
@@ -53,7 +53,7 @@
     <!-- Parton Gun test with fixed pT and fixed IS pos = 0  -->
     <PGun>
       <name>PGun</name>
-      <pT>100</pT>
+      <pT>16</pT>
     </PGun>
 
     <!-- Pythia Gun -->
@@ -67,6 +67,7 @@
       <!-- Note that if the tag exists it cannot be empty (tinyxml produces a segfault) -->
       <LinesToRead>
       	HardQCD:all = on
+      	PartonLevel:FSR = on
       </LinesToRead>
     </PythiaGun>     
   </Hard>   
@@ -75,9 +76,9 @@
   <!-- Individual Eloss Modules run Eloss and Eloss Manager  -->
   <Eloss>
 
-    <deltaT>0.02</deltaT>
+    <deltaT>0.0002</deltaT>
     <formTime> -0.1</formTime>
-    <maxT>6</maxT>
+    <maxT>1</maxT>
 
 
     <Matter>
@@ -106,10 +107,17 @@
     
     <Martini>
       <name > Martini </name>
-      <alpha_s> 0.3 </alpha_s>
+      <alpha_s> 0.333333 </alpha_s>
       <pcut> 2.0 </pcut>
       <path>../src/jet/Martini/</path>
     </Martini>
+
+    <QinGuangYou>
+      <name > QinGuangYou </name>
+      <alpha_s> 0.333333 </alpha_s>
+      <pcut> 2.0 </pcut>
+      <path>../src/jet/Martini/</path>
+    </QinGuangYou>
 
     <AdSCFT>
       <name> AdSCFT </name>
@@ -144,7 +152,7 @@
     <!-- Test Brick if bjorken_expansion_on="true", T(t) = T * (start_time[fm]/t)^{1/3} -->
     <Brick bjorken_expansion_on="false" start_time="0.6">
       <name>Brick</name>
-      <T>0.2</T>
+      <T>0.4</T>
     </Brick>
 
     <!-- Test Gubser  -->

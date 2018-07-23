@@ -20,7 +20,6 @@
 #include <string>
 
 #include<iostream>
-
 using namespace std;
 
 #define MAGENTA "\033[35m"
@@ -64,6 +63,7 @@ void HardProcess::Init()
   InitTask();
 
   JetScapeTask::InitTasks();
+  plist.push_back(1); 
 }
 
 void HardProcess::Exec()
@@ -72,6 +72,7 @@ void HardProcess::Exec()
   VERBOSE(8)<<"Current Event #"<<GetCurrentEvent();
   
   JetScapeTask::ExecuteTasks();
+  plist.push_back(1); 
 }
 
 void HardProcess::Clear()
@@ -81,6 +82,7 @@ void HardProcess::Clear()
   hp_list.clear();
   hd_list.clear();
   VERBOSE(8)<<hp_list.size();
+  //plist.push_back(1); 
 }
 
 void HardProcess::WriteTask(weak_ptr<JetScapeWriter> w)
@@ -104,7 +106,14 @@ void HardProcess::WriteTask(weak_ptr<JetScapeWriter> w)
     
     // Hard partons
     f->WriteComment("HardProcess Parton List: "+GetId());  
-    for ( auto hp : hp_list )    f->Write( hp );
+    //int i = 0; 
+    for ( auto hp : hp_list )
+    {
+       //f->WriteWhiteSpace("["+to_string(i)+"] P");
+       f->Write( hp );
+       //++i; 
+    }
+    //f->WriteComment("Final State Parton List"); 
   }
 }
 

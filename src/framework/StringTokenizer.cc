@@ -84,6 +84,13 @@ bool StringTokenizer::isHadronEntry() const
   return false;
 }
 
+bool StringTokenizer::isPartonEntry() const
+{
+  if (buffer.length()==0)	return false; 
+  if (buffer.find("] P") <100)	return true; 
+  return false; 
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // reset string buffer, delimiter and the currsor position
 ///////////////////////////////////////////////////////////////////////////////
