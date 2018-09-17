@@ -1,6 +1,28 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project (libJetScape)
 
+
+find_library(HDF5_CXX_LIB hdf5_cpp)
+if("${HDF5_CXX_LIB}" STREQUAL "HDF5_CXX_LIB-NOTFOUND")
+  message(STATUS "HDF5 C++ library not found")
+else()
+  message(STATUS "Found HDF5 C++ library: ${HDF5_CXX_LIB}")
+  # Having found the C++ lib, also locate the header and C lib.
+  find_path(HDF5_INCLUDE_DIRS H5Cpp.h)
+  include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
+  find_library(HDF5_C_LIB hdf5)
+  # Also link to zlib for HDF5 compression.
+  set(HDF5_LIBRARIES ${HDF5_CXX_LIB} ${HDF5_C_LIB} z)
+  # Set preprocessor definition so HDF5 output is compiled.
+  add_definitions(-DTRENTO_HDF5)
+endif()
+
+if(UNIX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+message(STATUS "-------------" "${HDF5_LIBRARIES}")
+
+
 #for MacOSX
 cmake_policy(SET CMP0042 NEW)
 
@@ -52,11 +74,16 @@ endif()
 
 #jet
 FILE(GLOB jetsources jet/*.cc)
-set (SOURCES  ${SOURCES}  ${jetsources} )
+FILE(GLOB tequilasources jet/Tequila/*.cc)
+set (SOURCES  ${SOURCES}  ${jetsources}  ${tequilasources} )
 
 #hadronization
 FILE(GLOB hadrosources hadronization/*.cc)
 set (SOURCES  ${SOURCES}  ${hadrosources} )
+
+#tools
+FILE(GLOB toolssources tools/*.cc)
+set (SOURCES  ${SOURCES}  ${toolssources} )
 
 ## Take care of options
 if(NOT "${iSS}")
@@ -71,7 +98,7 @@ set (SOURCES  ${SOURCES}  ${readersources} )
 #######################################
 
 add_library(JetScape SHARED ${SOURCES})
-target_link_libraries(JetScape JetScapeThird GTL ${PYTHIA8_LIBRARIES} libtrento ${Boost_LIBRARIES}  )
+target_link_libraries(JetScape JetScapeThird GTL ${PYTHIA8_LIBRARIES} libtrento ${HDF5_LIBRARIES} ${GSL_LIBRARIES} ${GSLCALAS_LIBRARIES}${Boost_LIBRARIES} ${_hdf5_libs} -pthread -lpthread  )
 
 if (${ROOT_FOUND})
   target_link_libraries(JetScape ${ROOT_LIBRARIES})
@@ -93,3 +120,8 @@ if ( iSS )
   target_link_libraries (JetScape iSS_lib )
 endif()
 # -------------------------------------------------------------------------
+
+
+
+
+

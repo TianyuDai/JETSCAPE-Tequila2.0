@@ -47,7 +47,7 @@ void JetScapePartonReader<T>::Next()
 
   string line;
   string token;  
-  INFO<<"Current Event = "<<currentEvent;
+  // INFO<<"Current Event = "<<currentEvent;
 
   //pShowers.push_back(make_shared<PartonShower>());
   //pShower=pShowers[0];
