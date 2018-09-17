@@ -90,7 +90,9 @@ message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS})
 # Needs to come after CXX flags (cause it needs to pickup fPIC)
 # and before install options (cause it overwrites the default location)
 add_subdirectory(external_packages/trento/)
+#add_subdirectory(external_packages/LIDO/)
 include_directories("${CMAKE_SOURCE_DIR}/external_packages/trento/src/")
+#include_directories("${CMAKE_SOURCE_DIR}/external_packages/LIDO/src/")
 ###########################
 
 #############################################
@@ -121,6 +123,9 @@ install(
   "${CMAKE_SOURCE_DIR}/src/hydro/"
   "${CMAKE_SOURCE_DIR}/src/jet/"
   "${CMAKE_SOURCE_DIR}/src/reader/"
+  "${CMAKE_SOURCE_DIR}/src/tools/"
+  "${CMAKE_SOURCE_DIR}/src/jet/Tequila"
+  
   # external packages
   "${CMAKE_SOURCE_DIR}/external_packages/"
   "${CMAKE_SOURCE_DIR}/external_packages/iSS/src/"
@@ -218,14 +223,72 @@ if (${PYTHIA8_FOUND})
   Message(STATUS "Pythia8 Include dir : " ${PYTHIA8_INCLUDE_DIR})
 endif()
 
-message("Looking for HDF5 ...")
-find_package(HDF5)
-if(${HDF5_FOUND})
-  include_directories(${HDF5_INCLUDE_DIRS})
-  message(STATUS "HDF5 Include dir : " ${HDF5_INCLUDE_DIRS})
-  set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_HDF5" )
-  set(_hdf5_libs ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_HL_LIBRARIES})
-endif(${HDF5_FOUND})
+#message("Looking for HDF5 ...")
+#find_package(HDF5)
+#if(${HDF5_FOUND})
+#  include_directories(${HDF5_INCLUDE_DIRS})
+#  message(STATUS "HDF5 Include dir : " ${HDF5_INCLUDE_DIRS})
+#  set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DUSE_HDF5" )
+#  set(_hdf5_libs ${HDF5_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${HDF5_HL_LIBRARIES})
+#endif(${HDF5_FOUND})
+
+# Read HDF5_ROOT either as a CMake option or environment variable.
+if(NOT HDF5_ROOT)
+  set(HDF5_ROOT "/usr/")
+endif()
+
+# If HDF5_ROOT was set, search for the header and libraries in that location,
+# otherwise try to extract the locations from the h5c++ compiler wrapper.
+if(HDF5_ROOT)
+  set(HDF5_INCLUDE_HINT "${HDF5_ROOT}/include/hdf5/serial")
+  set(HDF5_LIBRARY_HINT "${HDF5_ROOT}/lib/x86_64-linux-gnu/hdf5/serial")
+else()
+  find_program(H5CXX h5c++)
+  if(H5CXX)
+    if(STATIC)
+      set(H5CXX_ARG "-noshlib")
+    else()
+      set(H5CXX_ARG "-shlib")
+    endif()
+    # parse output to extract include and library dirs (-I and -L flags)
+    execute_process(COMMAND ${H5CXX} -show ${H5CXX_ARG} OUTPUT_VARIABLE H5CXX_OUTPUT)
+    foreach(TYPE "INCLUDE" "LIBRARY")
+      string(SUBSTRING ${TYPE} 0 1 FLAG)
+      set(FLAG " -${FLAG}")
+      string(REGEX MATCH "${FLAG}[^ ]+" FLAG_HINT ${H5CXX_OUTPUT})
+      string(REPLACE "${FLAG}" "" HDF5_${TYPE}_HINT "${FLAG_HINT}")
+    endforeach()
+  endif()
+endif()
+
+# Find all required HDF5 components.
+find_path(HDF5_INCLUDE_DIRS H5Cpp.h HINTS ${HDF5_INCLUDE_HINT})
+find_library(HDF5_CXX_LIB hdf5_cpp HINTS ${HDF5_LIBRARY_HINT})
+find_library(HDF5_C_LIB hdf5 HINTS ${HDF5_LIBRARY_HINT})
+find_library(ZLIB z)
+
+# Group HDF5 components by whether they were found or not.
+set(HDF5_VARS_FOUND "")
+set(HDF5_VARS_MISSING "")
+set(HDF5_FOUND TRUE)
+foreach(VAR HDF5_INCLUDE_DIRS HDF5_CXX_LIB HDF5_C_LIB ZLIB)
+  if(${VAR})
+    set(HDF5_VARS_FOUND "${HDF5_VARS_FOUND} ${${VAR}}")
+  else()
+    set(HDF5_FOUND FALSE)
+    set(HDF5_VARS_MISSING "${HDF5_VARS_MISSING} ${VAR}")
+  endif()
+endforeach()
+
+# Report HDF5 status and set relevant variables if found.
+if(HDF5_FOUND)
+  set(HDF5_LIBRARIES ${HDF5_CXX_LIB} ${HDF5_C_LIB} ${ZLIB})
+  include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
+  add_definitions(-DTRENTO_HDF5)
+  message(STATUS "Found HDF5:${HDF5_VARS_FOUND}")
+else()
+  message(STATUS "HDF5 not found (missing:${HDF5_VARS_MISSING}, found:${HDF5_VARS_FOUND})")
+endif()
 
 message("Looking for MPI ...")
 find_package(MPI)
@@ -253,7 +316,8 @@ include_directories(./src/preequilibrium )
 include_directories(./src/hydro )
 include_directories(./src/hadronization )
 include_directories(./src/jet )
-include_directories(./src/helloworld )
+include_directories(./src/jet/Tequila )
+include_directories(./src/tools )
 include_directories(./src/reader )
 include_directories(./external_packages/)
 include_directories(./external_packages/gtl/include )
@@ -331,8 +395,9 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 
 ### Run Jetscape
 
-add_executable(PGun_parton ./test/PGun_parton.cc)
-target_link_libraries(PGun_parton JetScape )
+add_executable(Langevin_Boltzmann ./LLBT_test/Langevin_Boltzmann.cc)
+target_link_libraries(Langevin_Boltzmann JetScape )
+
 
 #if(${HDF5_FOUND})
 #  add_executable(hydroFileTest ./examples/hydroFileTest.cc)
@@ -350,8 +415,8 @@ target_link_libraries(PGun_parton JetScape )
 
 ### Read Jetscape output
 
-add_executable(PGun_leading_parton ./test/PGun_leading_parton.cc)
-target_link_libraries(PGun_leading_parton JetScape )
+add_executable(pureglue ./LLBT_test/pureglue.cc)
+target_link_libraries(pureglue JetScape )
 
 # executables with additional dependencies
 if (freestream AND music)
@@ -378,10 +443,7 @@ endif (music AND iSS )
 
 # -----------------------------------------------------------
 #### copy jetscape_init.xml to build/, such that one can test xml reading in build/ directory
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/examples/jetscape_init.xml DESTINATION ${CMAKE_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/pp_parton.xml DESTINATION ${CMAKE_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/pp_hadron.xml DESTINATION ${CMAKE_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test/PGun_jet_el.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LLBT_test/Langevin_Boltzmann.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #### copy essential files for MUSIC to build/
 if (freestream)
