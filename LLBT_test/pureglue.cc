@@ -40,9 +40,9 @@ int main(int argc, char** argv)
 		for (int k = 0; k < 6; k++)
 		{
 		  double omegacut = omegacut_list[k]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat"); 
-		  std::ofstream jet_output (("../../Result/LLBT/inel/20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.txt").c_str()); 
-		  const int nEvents = 1000000; 
+		  auto reader=make_shared<JetScapeReaderAscii>("hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat"); 
+		  std::ofstream jet_output (("../../Result/LLBT/inel/hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.txt").c_str());
+		  const int nEvents = 10000; 
 		  double Emean = 0.; 
 		  double jetpTMin = 4., jetRadius = 0.4; 
 		  int nParticles = 0; 

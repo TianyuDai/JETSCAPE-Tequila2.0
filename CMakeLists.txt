@@ -398,6 +398,8 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 add_executable(Langevin_Boltzmann ./LLBT_test/Langevin_Boltzmann.cc)
 target_link_libraries(Langevin_Boltzmann JetScape )
 
+add_executable(real_hydro_LLBT ./LLBT_test/real_hydro_LLBT.cc)
+target_link_libraries(real_hydro_LLBT JetScape )
 
 #if(${HDF5_FOUND})
 #  add_executable(hydroFileTest ./examples/hydroFileTest.cc)

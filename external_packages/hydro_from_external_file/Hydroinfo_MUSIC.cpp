@@ -70,6 +70,12 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
     }
     string temp1;
     string temp_name;
+
+    // Default values
+    nskip_tau=1;
+    nskip_x=1;
+    nskip_eta=1;
+
     while (!configuration.eof()) {
         getline(configuration, temp1);
         stringstream ss(temp1);
@@ -112,8 +118,9 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
     }
     configuration.close();
 
-    hydroDx = 2.*hydroXmax/(ixmax - 1.);
+    hydroDx = 0.17; // 2.*hydroXmax/(ixmax); // With IP-Glasma initial conditions, life is a little more complicated
     hydroDeta = 2.*hydro_eta_max/(static_cast<double>(ietamax));
+    hydroXmax=100*0.17;
 
     hydroWhichHydro = whichHydro;
     use_tau_eta_coordinate = 1;
@@ -372,7 +379,8 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
         hydroDeta *= nskip_eta;
 
         nskip_tau = nskip_tau_in;
-        ixmax = static_cast<int>(2.*hydroXmax/hydroDx + 0.001);
+        ixmax = 200; //static_cast<int>(2.*hydroXmax/hydroDx + 0.001)+1; // With IP-Glasma initial conditions, life is a little more complicated
+	//std::cout << ixmax << "\n";
 
         int n_eta = 1;
         // number of fluid cell in the transverse plane
@@ -416,8 +424,8 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
 
         int ik = 0;
         fluidCell_2D newCell;
-        double T, QGPfrac, ux, uy, ueta;
-        double vx, vy, vz;
+        float T, QGPfrac, ux, uy, ueta;
+        float vx, vy, vz;
         float pi00 = 0.0;
         float pi01 = 0.0;
         float pi02 = 0.0;
@@ -431,7 +439,7 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
         float bulkPi = 0.0;
         float e_plus_P = 1e-15;
         float cs2 = 0.0;
-        int size = sizeof(double);
+        int size = sizeof(float);
         while (true) {
             int status = 0;
             status = std::fread(&T, size, 1, fin);
@@ -442,6 +450,13 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
             if (status != 5) {  // this is the end of file
                 break;
             }
+
+
+	//    std::cout << "status: " << status << "\n";
+	//    std::cout << "temp: " << T << "\n";
+	//    std::cout << "batard1: " << vx << "\n";
+	//    std::cout << "batard2: " << vy << "\n";
+	//    std::cout << "batard3: " << vz << "\n";
 
             double v2 = vx*vx + vy*vy + vz*vz;
             if (v2 > 1.) {
@@ -497,6 +512,7 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
                 continue;
 
             // print out tau information
+	    //std::cout << hydroTau0 << " " << itau_idx << " " << hydroDtau << " " << nskip_tau << "\n";
             double tau_local = hydroTau0 + itau_idx*hydroDtau/nskip_tau;
             if ((ik-1)%(num_fluid_cell_trans*n_eta) == 0) {
                 cout << "read in tau frame: " << itau_idx
@@ -662,8 +678,9 @@ void Hydroinfo_MUSIC::readHydroData(int whichHydro, int nskip_tau_in,
     if (whichHydro == 8 || whichHydro == 9) {
         hydroTauMax = (
             hydroTau0 + hydroDtau*static_cast<int>(
-                        static_cast<double>(lattice_2D->size())
-                        /((2.*hydroXmax/hydroDx)*(2.*hydroXmax/hydroDx)) - 1));
+                        static_cast<double>(lattice_2D->size())/(200*200)-1)
+	    );
+                        // /((2.*hydroXmax/hydroDx+1)*(2.*hydroXmax/hydroDx+1)) - 1));
         itaumax = static_cast<int>((hydroTauMax - hydroTau0)/hydroDtau);
     }
 
@@ -867,6 +884,10 @@ void Hydroinfo_MUSIC::getHydroValues(double x, double y,
                             &(*lattice_2D)[position[0][ipy][ipeta][iptau]]);
                     HydroCell_2D_ptr2 = (
                             &(*lattice_2D)[position[1][ipy][ipeta][iptau]]);
+
+//std::cout << "cell1=" << HydroCell_2D_ptr1->temperature << "\n";
+//std::cout << "cell2=" << HydroCell_2D_ptr2->temperature << "\n";
+
                     T += prefrac*((1. - xfrac)*HydroCell_2D_ptr1->temperature
                                   + xfrac*HydroCell_2D_ptr2->temperature);
                     ux += prefrac*((1. - xfrac)*HydroCell_2D_ptr1->ux

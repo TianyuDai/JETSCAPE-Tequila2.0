@@ -20,6 +20,7 @@
 #include "PGun.h"
 #include "PythiaGun.h"
 #include "PartonPrinter.h"
+#include "HydroFromFile.h"
 
 #include "tinyxml2.h"
 #include <chrono>
@@ -57,12 +58,14 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  dtxml->SetText(deltaT);
   	  
 	  auto jetscape = make_shared<JetScape>("./Langevin_Boltzmann.xml",N);
-	  jetscape->SetId("primary");
+	  jetscape->SetReuseHydro(true); 
+	  jetscape->SetNReuseHydro(1000000); 
+	  // jetscape->SetId("primary");
 
 	  auto trento = make_shared<TrentoInitial>();
-      auto pythiaGun= make_shared<PythiaGun> ();
+	  auto pythiaGun= make_shared<PythiaGun> ();
 	  auto pGun= make_shared<PGun> ();
-	  auto hydro = make_shared<Brick> ();
+	  auto hydro = make_shared<HydroFromFile> ();
 	  // jetscape->Add(trento);
 	  // jetscape->Add(pythiaGun);
 	  jetscape->Add(pGun); 
@@ -86,7 +89,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  auto writer= make_shared<JetScapeWriterAscii> (("20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat").c_str());
+	  auto writer= make_shared<JetScapeWriterAscii> (("hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat").c_str());
 	  jetscape->Add(writer); 
 	  
 	  jetscape->Init();

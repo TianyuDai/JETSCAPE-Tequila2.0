@@ -177,13 +177,13 @@
     <!-- Hydro from a file  -->
     <hydro_from_file>
       <name>Hydro from file </name>
-      <read_in_multiple_hydro>1</read_in_multiple_hydro>
+      <read_in_multiple_hydro>0</read_in_multiple_hydro>
       <hydro_files_folder>../examples/test_hydro_files</hydro_files_folder>
 
       <!-- read in file type  -->
       <!-- hydro_type == 1 read in evo file from VISHNew -->
       <!-- hydro_type == 2 read in evo file from MUSIC -->
-      <hydro_type>1</hydro_type>
+      <hydro_type>3</hydro_type>
 
       <!-- VISHNew hydro evolution filename (hdf5 format) -->
       <VISH_file>../examples/test_hydro_files/VISH_evo.h5</VISH_file>
@@ -193,8 +193,8 @@
       
       <!-- MUSIC hydro evolution filename (plain binary format) -->
       <!-- the associated input file specifies the grid information -->
-      <MUSIC_input_file>../examples/test_hydro_files/MUSIC_input</MUSIC_input_file>
-      <MUSIC_file>../examples/test_hydro_files/MUSIC_evo.dat</MUSIC_file>
+      <MUSIC_input_file>../external_packages/hydro_events/lhc_2030/input_for_jetscape</MUSIC_input_file>
+      <MUSIC_file>../external_packages/hydro_events/lhc_2030/evolution_xyeta.dat</MUSIC_file>
       <!-- transition temperature between QGP and Hadron Resonance Gas -->
       <T_c>0.154</T_c>
 
