@@ -26,22 +26,22 @@ using namespace Jetscape;
 
 int main(int argc, char** argv)
 {
-  double scale_list[1] = {1.}; 
+  double scale_list[3] = {0.5, 1., 2.}; 
   double alpha_list[1] = {0.3}; 
-  double omegacut_list[6] = {0.1, 0.25, 0.5, 1., 2., 4.}; 
+  double omegacut_list[1] = {1.}; 
 
-  for (int i = 0; i < 1; i++)
+  for (int i = 0; i < 3; i++)
   {
   	  
 	  double scale = scale_list[i]; 
 	  for (int j = 0; j < 1; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
-		for (int k = 0; k < 6; k++)
+		for (int k = 0; k < 1; k++)
 		{
 		  double omegacut = omegacut_list[k]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat"); 
-		  std::ofstream jet_output (("../../Result/LLBT/inel/hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.txt").c_str());
+		  auto reader=make_shared<JetScapeReaderAscii>("./realhydro_20GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_medium_inel.dat"); 
+		  std::ofstream jet_output (("../../Result/Tequila/elas/realhydro_20GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_medium_inel.txt").c_str());
 		  const int nEvents = 10000; 
 		  double Emean = 0.; 
 		  double jetpTMin = 4., jetRadius = 0.4; 
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 		  
 		  vector <double> EBin(101); 
 		  for (unsigned int j = 0; j < EBin.size(); j++)
-		  	EBin[j] = 2.+(double) j * 22. / 100.; 
+		  	EBin[j] = 2.+(double) j * 20. / 100.; 
 		  vector <double> cs(EBin.size()-1, 0.), err(EBin.size()-1, 0.); 
 		  vector <int> sqSum(EBin.size()-1, 0); 
 		  

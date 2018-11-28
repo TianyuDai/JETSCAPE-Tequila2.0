@@ -25,6 +25,7 @@
 using namespace std;
 
 namespace Jetscape {
+//double JetEnergyLossManager::manager_time; 
 
 JetEnergyLossManager::JetEnergyLossManager()
 {
@@ -56,13 +57,14 @@ void JetEnergyLossManager::Clear()
   // Clean Up not really working with iterators (see also above!!!) Some logic not clear for me.
   JetScapeSignalManager::Instance()->CleanUp();
   JetScapeTask::ClearTasks();
-  
   VERBOSE(8)<<hp.size();
 }
   
 
 void JetEnergyLossManager::Init()
 {
+//  manager_time =0.; 
+
   INFO<<"Intialize JetEnergyLoss Manager ...";
 
   if (GetNumberOfTasks()<1)
@@ -78,6 +80,18 @@ void JetEnergyLossManager::Init()
   JetScapeSignalManager::Instance()->ConnectGetHardPartonListSignal(shared_from_this());
 }
 
+void JetEnergyLossManager::Finish()
+{
+  INFO<<"Finish JetEnergyLoss Manager ...";
+
+  if (GetNumberOfTasks()<1)
+    {
+      WARN << " : No valid Energy Loss Manager modules found ...";
+      exit(-1);
+    }
+  
+  JetScapeTask::FinishTasks();
+}
 
 void JetEnergyLossManager::WriteTask(weak_ptr<JetScapeWriter> w)
 {
@@ -87,6 +101,9 @@ void JetEnergyLossManager::WriteTask(weak_ptr<JetScapeWriter> w)
 
 void JetEnergyLossManager::Exec()
 {
+//   time_t t; 
+//   t = clock(); 
+
   VERBOSE(1)<<"Run JetEnergyLoss Manager ...";
   JSDEBUG<<"Task Id = "<<this_thread::get_id();
   
@@ -188,6 +205,9 @@ void JetEnergyLossManager::Exec()
   
   //Add acheck if the parton shower was actually created for the Modules ....
   VERBOSE(3)<<" "<<GetNumberOfTasks()<<" Eloss Manager Tasks/Modules finished.";
+
+//  t = clock() - t; 
+//  manager_time += ((float)t) / CLOCKS_PER_SEC; 
 }
 
 void JetEnergyLossManager::CreateSignalSlots()

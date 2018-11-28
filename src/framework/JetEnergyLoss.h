@@ -35,6 +35,7 @@ class JetEnergyLoss : public JetScapeModuleBase, public std::enable_shared_from_
  public:
   /** Default constructor. It sets the value of qhat, deltaT and maxT to -99.99, 0.0 and 0.0, respectively. Standard signal slot flags are set to false.
    */
+//  static double energy_loss_time; 
   JetEnergyLoss();
 
   /** Standard constructor. Default value of qhat is set to -99.99. Standard signal slot flags are set to false.
@@ -80,6 +81,7 @@ class JetEnergyLoss : public JetScapeModuleBase, public std::enable_shared_from_
   */
   virtual void Clear();
 
+  virtual void Finish(); 
   /** Default function to perform the energy loss for partons at time "time". It should be overridden by different energy loss tasks.
       @param deltaT Step-size.
       @param time Current time.

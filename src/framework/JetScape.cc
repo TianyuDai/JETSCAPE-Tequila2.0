@@ -208,7 +208,7 @@ void JetScape::Exec()
 	}
       }
       // Now clean up, only affects active taskjs
-      JetScapeTask::ClearTasks();
+	  JetScapeTask::ClearTasks();
 
       IncrementCurrentEvent();
     }

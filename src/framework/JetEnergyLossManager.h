@@ -29,6 +29,8 @@ class JetEnergyLossManager : public JetScapeTask, public std::enable_shared_from
 {
   
  public:
+//  static double manager_time; 
+
   /** Default constructor to create a jet energy loss manager. Sets task ID as "JLossManager". Flag GetHardPartonListConnected is set to false.
    */  
   JetEnergyLossManager();
@@ -49,6 +51,8 @@ class JetEnergyLossManager : public JetScapeTask, public std::enable_shared_from
   /** It erases the tasks attached with the energy loss manager. It can be overridden by other tasks.
    */
   virtual void Clear();
+
+  virtual void Finish(); 
 
   /** It writes the output information relevant to the jet energy loss tasks/subtasks into a file. It can be overridden by other tasks.
       @param w A pointer of type JetScapeWriter class.

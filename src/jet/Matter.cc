@@ -31,6 +31,13 @@ using namespace std;
 
 const double QS = 1.0 ;
 
+/*double Matter::matter_time; 
+int Matter::k; 
+double Matter::matter_high_time; 
+double Matter::matter_low_time; 
+double Matter::matter_pre_time; 
+double Matter::matter_before_time; */
+
 Matter::Matter()
 {
   SetId("Matter");
@@ -44,6 +51,13 @@ Matter::~Matter()
 
 void Matter::Init()
 {
+/*  matter_time = 0.; 
+  matter_high_time = 0.; 
+  matter_low_time = 0.; 
+  matter_pre_time = 0.; 
+  matter_before_time = 0.; 
+	k = 0; */
+
   INFO<<"Intialize Matter ...";
 
   // Redundant (get this from Base) quick fix here for now
@@ -73,7 +87,7 @@ void Matter::Init()
     hydro_Tc = 0.16;
     brick_length = 4.0;
     vir_factor = 1.0;
-      MaxColor = 101;
+    MaxColor = 101;
 
     double m_qhat=-99.99;
     matter->FirstChildElement("qhat0")->QueryDoubleText(&m_qhat);
@@ -85,6 +99,13 @@ void Matter::Init()
  
     int flagInt=-100;
     double inputDouble=-99.99;
+
+    if ( !matter->FirstChildElement("matter_on") ) {
+	WARN << "Couldn't find sub-tag Eloss -> Matter -> matter_on";
+        throw std::runtime_error ("Couldn't find sub-tag Eloss -> Matter -> matter_on");
+    }
+    matter->FirstChildElement("matter_on")->QueryIntText(&flagInt);
+    matter_on = flagInt;
 
     if ( !matter->FirstChildElement("in_vac") ) {
 	WARN << "Couldn't find sub-tag Eloss -> Matter -> in_vac";
@@ -161,7 +182,8 @@ void Matter::Init()
         cout << "Reminder: negative vir_factor is set, initial energy will be used as initial t_max" << endl;
     }
 
-    VERBOSE(7)<< MAGENTA << "MATTER input parameter";
+    INFO << MAGENTA << "MATTER input parameter";
+    INFO << MAGENTA << "matter shower on: " << matter_on;
     INFO << MAGENTA << "in_vac: " << in_vac << "  brick_med: " << brick_med << "  recoil_on: " << recoil_on;
     INFO << MAGENTA << "Q0: " << Q00 << " vir_factor: " << vir_factor << "  qhat0: " << qhat0 << " alphas: " << alphas << " hydro_Tc: " << hydro_Tc << " brick_length: " << brick_length;
 
@@ -192,16 +214,19 @@ void Matter::WriteTask(weak_ptr<JetScapeWriter> w)
 
 void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut)
 {
-
+  // INFO << BOLDYELLOW << "beginning of matter energy loss"; 
+// time_t tt; 
+// tt = clock(); 
+  // k++; 
   double z=0.5;
   double blurb,zeta,tQ2 ;
   int iSplit,pid_a,pid_b;
   unsigned int max_color, min_color, min_anti_color;
   double velocity[4],xStart[4],velocity_jet[4];
     
-    //iEvent++;
+   // iEvent++;
     
-    //INFO << BOLDYELLOW << " Event number = " << iEvent;
+   // INFO << BOLDYELLOW << " Event number = " << iEvent;
     
   VERBOSESHOWER(9)<< MAGENTA << "SentInPartons Signal received : "<<deltaT<<" "<<Q2<<" "<< pIn.size();
     
@@ -270,13 +295,17 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
 
    VERBOSE(8) << " qhat0 = " << qhat0 << " qhat = " << qhat;
     
-    
+//    tt = clock() - tt; 
+//	matter_pre_time += ((float)tt) / CLOCKS_PER_SEC; 
   for (int i=0;i<pIn.size();i++)
   {
+//	 time_t t; 
+//  t = clock(); 
+//	INFO << BOLDGREEN << "virtuality " << pIn[i].t();
 
      VERBOSE(8) << " *  parton formation spacetime point= "<< pIn[i].x_in().t() << "  " << pIn[i].x_in().x() << "  " << pIn[i].x_in().y() << "  " << pIn[i].x_in().z();
 
-
+      int jet_stat=pIn[i].pstat();  // daughter of recoil will always be recoil
       
       //cout << "MATTER -- status: " << pIn[i].pstat() << "  energy: " << pIn[i].e() << " color: " << pIn[i].color() << "  " << pIn[i].anti_color() << "  clock: " << time << endl;
 
@@ -375,7 +404,11 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
 
           // KK:
           //pIn[i].set_jet_v(velocity); // SC: take out to the front
-          pIn[i].set_t(tQ2); // Also resets momentum!
+
+	  // SC: if matter_on = false, set zero virtuality and MATTER will not do parton shower
+          if(matter_on) pIn[i].set_t(tQ2); // Also resets momentum!
+	  else pIn[i].set_t(0.0); 
+
           pIn[i].set_mean_form_time();
           double ft = generate_L(pIn[i].mean_form_time());
           pIn[i].set_form_time(ft);
@@ -459,10 +492,14 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
       }
 
       if(Q0<1.0) Q0=1.0;
-
+// if (pIn[i].t() > Q0*Q0 + rounding_error) INFO << BOLDGREEN << "initial virtuality: " << pIn[i].t() << " energy " << pIn[i].e() << " rapidity " << pIn[i].rap() << " pT " << pIn[i].pt() << " pL " << pIn[i].pl() << " calculated " << sqrt(pIn[i].pt()*pIn[i].pt()+pIn[i].pl()*pIn[i].pl()-pIn[i].e()*pIn[i].e()) << " time " << Time;
       //if (pIn[i].t() > QS + rounding_error)
+//		matter_before_time += ((float)(clock()-t)) / CLOCKS_PER_SEC; 
+//	time_t t1; 
+//	t1 = clock(); 
       if (pIn[i].t() > Q0*Q0 + rounding_error || ((!in_vac) && now_temp<=T0 && pIn[i].t() > QS*QS + rounding_error))
       {
+
           TakeResponsibilityFor ( pIn[i] ); // Generate error if another module already has responsibility.
           double decayTime = pIn[i].mean_form_time()  ;
 	    
@@ -632,7 +669,8 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
                       int iout;
                       double ft;
 
-                      pOut.push_back(Parton(0,pid2,0,pc2,el_vertex)); // recoiled
+                    WARN << "process 5: " << Parton(0,pid2,1,pc2,el_vertex).t(); 
+                      pOut.push_back(Parton(0,pid2,1,pc2,el_vertex)); // recoiled
                       iout = pOut.size()-1;
                       pOut[iout].set_jet_v(velocity_jet); // use initial jet velocity
                       pOut[iout].set_mean_form_time();
@@ -651,6 +689,7 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
                       pOut[iout].set_min_color(pIn[i].min_color());
                       pOut[iout].set_min_anti_color(pIn[i].min_anti_color());
               
+                WARN << "process 4: " << Parton(0,pid3,-1,pc3,el_vertex).t(); 
                       pOut.push_back(Parton(0,pid3,-1,pc3,el_vertex)); // back reaction
                       iout = pOut.size()-1;
                       pOut[iout].set_jet_v(velocity_jet);
@@ -898,8 +937,9 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
                   //newx[j] = pIn[i].x_in().comp(j) + (time + deltaT - pIn[i].x_in().comp(0))*velocity[j]/velocityMod;
                   newx[j] = pIn[i].x_in().comp(j) + (time - pIn[i].x_in().comp(0))*velocity[j]/velocityMod;
               }
-                  
-              pOut.push_back(Parton(0,pid_a,0,newp,newx));
+                 
+        // INFO << BOLDYELLOW << "first daughter: " << Parton(0,pid_a,jet_stat,newp,newx).t(); 
+              pOut.push_back(Parton(0,pid_a,jet_stat,newp,newx));
               int iout = pOut.size()-1;
                   
               pOut[iout].set_jet_v(velocity_jet); // use initial jet velocity
@@ -939,8 +979,9 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
                   //newx[j] = pIn[i].x_in().comp(j) + (time + deltaT - pIn[i].x_in().comp(0))*velocity[j]/velocityMod;
                   newx[j] = pIn[i].x_in().comp(j) + (time - pIn[i].x_in().comp(0))*velocity[j]/velocityMod;
               }
-	      
-              pOut.push_back(Parton(0,pid_b,0,newp,newx));
+	     
+        // INFO << BOLDYELLOW << "second daughter: " << Parton(0,pid_b,jet_stat,newp,newx).t();  
+              pOut.push_back(Parton(0,pid_b,jet_stat,newp,newx));
               iout = pOut.size()-1;
               pOut[iout].set_jet_v(velocity_jet); // use initial jet velocity
               pOut[iout].set_mean_form_time();
@@ -1084,7 +1125,7 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
 */
                       np = sqrt(px*px + py*py + pz*pz);
                       JSDEBUG << "FINAL p = " << p << " np = " << np;
-                      
+                WARN << "process 1: " << pIn[i].t();  
                       pOut.push_back(pIn[i]);
                       int iout = pOut.size()-1;
                       
@@ -1111,13 +1152,13 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
 	      } // end if(broadening_on) 
               //pOut.push_back(pIn[i]);
           }
+
       }
       else
       { // virtuality too low lets broaden it
-
           if(broadening_on)
           {
-
+			WARN << "broadening is turned on!!!"; 
               double now_zeta = ( ( time + initRdotV + (time - initR0) )/std::sqrt(2) )*fmToGeVinv;
               //double now_zeta = ( ( time + initRdotV )/std::sqrt(2) )*fmToGeVinv;
               qhat = fncQhat(now_zeta);
@@ -1240,7 +1281,7 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
 */
                   np = sqrt(px*px + py*py + pz*pz);
                   JSDEBUG << "FINAL p = " << p << " nnnp = " << np;
-
+            WARN << "process 0: " << pIn[i].t(); 
                   pOut.push_back(pIn[i]);
                   int iout = pOut.size()-1;
                   
@@ -1265,11 +1306,18 @@ void Matter::DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>&
               
               
               //pOut.push_back(pIn[i]);
+
           }
+
       }
-      
+//			  t1 = clock() - t1; 
+// 		matter_high_time += ((float)t1)/CLOCKS_PER_SEC; 
+//      t = clock() - t; 
+//  matter_time += ((float)t)/CLOCKS_PER_SEC;
   } // particle loop
-      
+// INFO << BOLDGREEN << "end of matter energy loss"; 
+//  k++; 
+ 
 }
 
 double Matter::generate_kt(double local_qhat, double dzeta)
@@ -3042,3 +3090,4 @@ double Matter::fnc0_derivative_alphas(double var_alphas, double var_qhat, double
     return(preFactor*pow(var_temp,3)*(2.0*var_alphas*log(5.7*max(var_ener,2.0*pi*var_temp)/24/pi/var_alphas/var_temp)-var_alphas));
 
 }
+

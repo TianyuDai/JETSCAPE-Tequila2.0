@@ -53,7 +53,8 @@ endif (iSS)
 ### Compiler & Linker Flags ###
 ###############################
 message("Compiler and Linker flags ...")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fPIC -pipe -Wall -std=c++11")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg -g -O -fPIC -pipe -Wall -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O -fPIC -pipe -Wall -std=c++11")
 ## can turn off some warnings
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unused-variable ")
 ## can turn on debugging information
@@ -398,8 +399,8 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 add_executable(Langevin_Boltzmann ./LLBT_test/Langevin_Boltzmann.cc)
 target_link_libraries(Langevin_Boltzmann JetScape )
 
-add_executable(real_hydro_LLBT ./LLBT_test/real_hydro_LLBT.cc)
-target_link_libraries(real_hydro_LLBT JetScape )
+add_executable(TrentoPythia ./LLBT_test/TrentoPythia.cc)
+target_link_libraries(TrentoPythia JetScape )
 
 #if(${HDF5_FOUND})
 #  add_executable(hydroFileTest ./examples/hydroFileTest.cc)
@@ -419,6 +420,12 @@ target_link_libraries(real_hydro_LLBT JetScape )
 
 add_executable(pureglue ./LLBT_test/pureglue.cc)
 target_link_libraries(pureglue JetScape )
+
+add_executable(Leading_Parton ./LLBT_test/Leading_Parton.cc)
+target_link_libraries(Leading_Parton JetScape )
+
+add_executable(RAA ./LLBT_test/RAA.cc)
+target_link_libraries(RAA JetScape )
 
 # executables with additional dependencies
 if (freestream AND music)
@@ -446,6 +453,7 @@ endif (music AND iSS )
 # -----------------------------------------------------------
 #### copy jetscape_init.xml to build/, such that one can test xml reading in build/ directory
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LLBT_test/Langevin_Boltzmann.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LLBT_test/TrentoPythia.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #### copy essential files for MUSIC to build/
 if (freestream)

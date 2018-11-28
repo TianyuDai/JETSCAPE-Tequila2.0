@@ -33,12 +33,14 @@ using std::ifstream;
 using std::ostream;
 using std::ios;
 
+double Martini::martini_time; 
+int Martini::vir_num; 
 
 Martini::Martini()
 {
   SetId("Martini");
   VERBOSE(8);
-
+//	WARN << "constructor called! "; 
   //vectors for elastic rates:
   dGamma_qq = new vector<double>;
   dGamma_qg = new vector<double>;
@@ -48,11 +50,15 @@ Martini::Martini()
 
 Martini::~Martini()
 {
+//	WARN << "destructor called! "; 
   VERBOSE(8);
 }
 
 void Martini::Init()
 {
+  martini_time = 0.; 
+  vir_num = 0; 
+  
   INFO<<"Intialize Martini ...";
 
   // Redundant (get this from Base) quick fix here for now
@@ -100,6 +106,10 @@ void Martini::Init()
 
 void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut)
 {
+	vir_num++; 
+  time_t t; 
+  t = clock(); 
+
   VERBOSESHOWER(5)<< MAGENTA << "SentInPartons Signal received : "<<deltaT<<" "<<Q2<<" "<< pIn.size();
 
   // particle info
@@ -164,6 +174,7 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
     beta = sqrt( vx*vx + vy*vy + vz*vz );
 
     // Only accept low t particles
+    // if (pIn[i].t() > Q0*Q0 + rounding_error) INFO << BOLDMAGENTA << "Martini virtuality: " << pIn[i].t(); 
     if (pIn[i].t() > Q0*Q0 + rounding_error || T < hydro_Tc) continue;
     TakeResponsibilityFor ( pIn[i] ); // Generate error if another module already has responsibility.
 
@@ -217,6 +228,12 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
     velocity_jet[2]=pIn[i].jet_v().y();
     velocity_jet[3]=pIn[i].jet_v().z();
 
+/*
+    velocity_jet[0]=0.;
+    velocity_jet[1]=0.;
+    velocity_jet[2]=0.;
+    velocity_jet[3]=0.;
+*/
     int process = DetermineProcess(pRest, T, deltaT, Id);
     VERBOSE(8)<< MAGENTA
 	      << "Time = " << Time << " Id = " << Id
@@ -231,7 +248,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 	pOut.push_back(Parton(0, Id, 0, pVec, xVec));
 	pOut[pOut.size()-1].set_form_time(0.);
 	pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	return;
       }
     if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
@@ -268,7 +286,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// quark radiating photon (q->qgamma)
@@ -304,7 +323,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// quark scattering with either quark (qq->qq) or gluon (qg->qg)
@@ -352,7 +372,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// quark converting to gluon
@@ -370,7 +391,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 	    pOut.push_back(Parton(0, 22, 0, pVec, xVec));
 	    pOut[pOut.size()-1].set_form_time(0.);
 	    pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
       }
@@ -407,7 +429,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// gluon split into quark-antiquark pair (g->qqbar)
@@ -448,7 +471,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// gluon scattering with either quark (gq->gq) or gluon (gg->gg)
@@ -496,7 +520,8 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		pOut[pOut.size()-1].set_form_time(0.);
                 pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
 	      }
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
 	// gluon converting to quark
@@ -511,18 +536,20 @@ void Martini::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 	    pOut.push_back(Parton(0, newId, 0, pVec, xVec));
 	    pOut[pOut.size()-1].set_form_time(0.);
 	    pOut[pOut.size()-1].set_jet_v(velocity_jet); // use initial jet velocity
-
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 	    return;
 	  }
       } // Id==21
   } // particle loop
+
+  t = clock() - t; 
+  martini_time += ((float)t) / CLOCKS_PER_SEC; 
 }
 
 int Martini::DetermineProcess(double pRest, double T, double deltaT, int Id)
 {
-
   double dT = deltaT/hbarc;   // time step in [GeV^(-1)]
-
   // get the rates for each process
   // total Probability = dT*Rate
   RateRadiative rateRad;
@@ -556,9 +583,9 @@ int Martini::DetermineProcess(double pRest, double T, double deltaT, int Id)
 
       // warn if total probability exceeds 1
       if (totalQuarkProb > 1.){
-	WARN << " : Total Probability for quark processes exceeds 1 ("
-	     << totalQuarkProb << "). "
-	     << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01).";
+	//WARN << " : Total Probability for quark processes exceeds 1 ("
+	//     << totalQuarkProb << "). "
+	//     << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01).";
 	//throw std::runtime_error ("Martini probability problem.");
       }
 
@@ -624,9 +651,9 @@ int Martini::DetermineProcess(double pRest, double T, double deltaT, int Id)
 
       // warn if total probability exceeds 1
       if (totalGluonProb > 1.){
-	WARN << " : Total Probability for gluon processes exceeds 1 ("
-	     << totalGluonProb << "). "
-	     << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01).";
+	//WARN << " : Total Probability for gluon processes exceeds 1 ("
+	 //    << totalGluonProb << "). "
+	 //    << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01).";
 	//throw std::runtime_error ("Martini probability problem.");
       }
 

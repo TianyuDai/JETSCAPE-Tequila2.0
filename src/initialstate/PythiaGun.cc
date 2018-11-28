@@ -20,6 +20,7 @@
 
 using namespace std;
 
+double PythiaGun::pythia_time; 
 
 PythiaGun::~PythiaGun()
 {
@@ -28,6 +29,7 @@ PythiaGun::~PythiaGun()
 
 void PythiaGun::InitTask()
 {
+  pythia_time = 0.; 
 
   JSDEBUG<<"Initialize PythiaGun"; 
   VERBOSE(8);
@@ -136,6 +138,9 @@ void PythiaGun::InitTask()
 
 void PythiaGun::Exec()
 {
+//  time_t t;
+//  t = clock(); 
+ 
   INFO<<"Run Hard Process : "<<GetId()<< " ...";
   VERBOSE(8)<<"Current Event #"<<GetCurrentEvent();
   //Reading vir_factor from xml for MATTER
@@ -169,11 +174,11 @@ void PythiaGun::Exec()
     
     // pTarr[0]=0.0; pTarr[1]=0.0;
     // pindexarr[0]=0; pindexarr[1]=0;
-
+	// WARN << "the number of particles generated is " << event.size(); 
     for(int parid=0; parid<event.size(); parid++){
       if ( parid<3 )continue;      // 0, 1, 2: total event and beams      
       Pythia8::Particle& particle = event[parid];
-
+	  // WARN << parid << " " << particle.id() << " " << particle.e(); 
       // only accept particles after MPI
       if ( particle.status()!=62 ) continue;
       // only accept gluons and quarks
@@ -183,6 +188,7 @@ void PythiaGun::Exec()
       // reject rare cases of very soft particles that don't have enough e to get
       // reasonable virtuality 
       if ( particle.pT() < 1.0/sqrt(vir_factor) ) continue;
+	  // if ( particle.e() < 2.0 ) WARN << "the energy of the particle is " << particle.e(); 
  	
 	//if(particle.id()==22) cout<<"########this is a photon!######" <<endl;
       // accept
@@ -276,6 +282,8 @@ void PythiaGun::Exec()
 
  
   VERBOSE(8)<<GetNHardPartons();
+//  t = clock() - t; 
+//  pythia_time += ((float)t)/CLOCKS_PER_SEC;   
 }
 
 int PythiaGun::GetNum()

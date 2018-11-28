@@ -40,23 +40,24 @@ void Show();
 void RunEvents(double scale, double alpha_s, double omegacut, int N)
 {
 	//modify the init.xml file
-  	  JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
+  	  // JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
+	  JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
   	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("mu_scale"); 
   	  scalexml->SetText(scale);
   	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("alpha_s");
   	  alphaxml->SetText(alpha_s);
   	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
-  	  double t = 0.3*0.3/alpha_s/alpha_s; 
-  	  tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
-  	  lenthxml->SetText(t);
+  	  // double t = 0.3*0.3/alpha_s/alpha_s; 
+  	  // tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
+  	  // lenthxml->SetText(t);
 	  // JetScapeXML::Instance()->CloseXMLFile();
 	  
-	  double deltaT = 0.1; 
-	  if (scale <= 0.5 || omegacut < 0.5) deltaT = 0.01; 
-      tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
+	  double deltaT = 0.01; 
+	  tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
   	  dtxml->SetText(deltaT);
   	  
+	  // auto jetscape = make_shared<JetScape>("./Langevin_Boltzmann.xml",N);
 	  auto jetscape = make_shared<JetScape>("./Langevin_Boltzmann.xml",N);
 	  jetscape->SetReuseHydro(true); 
 	  jetscape->SetNReuseHydro(1000000); 
@@ -65,6 +66,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  auto trento = make_shared<TrentoInitial>();
 	  auto pythiaGun= make_shared<PythiaGun> ();
 	  auto pGun= make_shared<PGun> ();
+	  // auto hydro = make_shared<Brick> (); 
 	  auto hydro = make_shared<HydroFromFile> ();
 	  // jetscape->Add(trento);
 	  // jetscape->Add(pythiaGun);
@@ -89,9 +91,11 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  auto writer= make_shared<JetScapeWriterAscii> (("hydro_20GeV_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_gluemedium_inel.dat").c_str());
+	  auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro.dat").c_str());
 	  jetscape->Add(writer); 
-	  
+
+	  time_t start, init; 
+
 	  jetscape->Init();
 
 	  jetscape->Exec();
@@ -117,7 +121,7 @@ int main(int argc, char** argv)
     
   double scale_list[1] = {1.}; 
   double alpha_list[1] = {0.3}; 
-  double omegacut_list[6] = {0.1, 0.25, 0.5, 1., 2., 4.}; 
+  double omegacut_list[1] = {2.}; 
   for (int i = 0; i < 1; i++)
   {
   	  
@@ -125,10 +129,10 @@ int main(int argc, char** argv)
 	  for (int j = 0; j < 1; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
-	  	for (int k = 0; k < 6; k++)
+	  	for (int k = 0; k < 1; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-	  		RunEvents(scale, alpha_s, omegacut, 1000000); 
+	  		RunEvents(scale, alpha_s, omegacut, 100000); 
 	  	}
 	  }
   }

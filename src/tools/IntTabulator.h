@@ -4,8 +4,9 @@
 #include "gsl/gsl_integration.h"
 #include <fstream>
 
-
-enum process_type {gg, gq, qg, qq, ggg, gqq, qqg, none}; 
+// qqb is qqbar->qqbar, qqp is qq'->qq', qqbp is qqbar->q'qbar', qqbgg is qqbar->gg
+enum process_type {gg, gq, qg, qq, qqp, qqb, gqqg, qggq, ggg, gqq, qqg, none}; 
+const static size_t nProcess = 12; 
 	
 struct f_params
 {
@@ -37,8 +38,7 @@ class IntTabulator
 	const double omegaMin = -1.*kMax/2.; 
 	const double qperpMax = 2*sqrt(kMax*kMax+kMax*omegaMin); 
 	// double cls_muperp; 
-	
-	std::string ProcessStrings[8] = {"gg", "gq", "qg", "qq", "ggg", "gqq", "qqg", "none"}; 
+	std::string ProcessStrings[nProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "gqqg", "qggq", "ggg", "gqq", "qqg", "none"}; 
   	
 
  public: 
@@ -63,10 +63,14 @@ class IntTabulator
   	friend double dGamma_domega(double omega, void *params); 
   	friend double dGamma_domega_qperp(double qperp, void *params); 
   	friend double dGamma_domega_qperp_k(double k, void *params); 
-  	friend double dGamma_domega_qperp_k_phi_gggg(double phi, void *params); 
-  	friend double dGamma_domega_qperp_k_phi_gqgq(double phi, void *params); 
-  	friend double dGamma_domega_qperp_k_phi_qgqg(double phi, void *params); 
-  	friend double dGamma_domega_qperp_k_phi_qqqq(double phi, void *params); 
+  	friend double dGamma_domega_qperp_k_phi_gg(double phi, void *params); 
+  	friend double dGamma_domega_qperp_k_phi_gq(double phi, void *params); 
+  	friend double dGamma_domega_qperp_k_phi_qg(double phi, void *params); 
+  	friend double dGamma_domega_qperp_k_phi_qq(double phi, void *params); 
+	friend double dGamma_domega_qperp_k_phi_qqp(double phi, void *params); 
+	friend double dGamma_domega_qperp_k_phi_qqb(double phi, void *params); 
+	friend double dGamma_domega_qperp_k_phi_qqbgg(double phi, void *params); 
+	friend double dGamma_domega_qperp_k_phi_qqbp(double phi, void *params); 
 
 	void Tabulator_dGamma_domega(double muperp, std::string path, process_type process); 
 //	double Interpolator_dGamma_domega(double omega); 
@@ -79,10 +83,14 @@ class IntTabulator
 double dGamma_domega(double omega, void *params); 
 double dGamma_domega_qperp(double qperp, void *params); 
 double dGamma_domega_qperp_k(double k, void *params); 
-double dGamma_domega_qperp_k_phi_gggg(double phi, void *params); 
-double dGamma_domega_qperp_k_phi_gqgq(double phi, void *params); 
-double dGamma_domega_qperp_k_phi_qgqg(double phi, void *params); 
-double dGamma_domega_qperp_k_phi_qqqq(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_gg(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_gq(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qg(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qq(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qqp(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qqb(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qqbgg(double phi, void *params); 
+double dGamma_domega_qperp_k_phi_qqbp(double phi, void *params); 
 
 #endif
 

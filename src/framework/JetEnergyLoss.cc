@@ -38,6 +38,7 @@
 using namespace std;
 
 namespace Jetscape {
+// double JetEnergyLoss::energy_loss_time; 
 
 JetEnergyLoss::JetEnergyLoss()
 {
@@ -94,12 +95,19 @@ void JetEnergyLoss::Clear()
   VERBOSESHOWER(8);
   if (pShower)
     pShower->clear();
-  
+  // JetScapeTask::ClearTasks();
   //inP=nullptr;pShower=nullptr; // kind of defeating the porpose of shared pointers somehow ...
+}
+
+void JetEnergyLoss::Finish()
+{
+  VERBOSESHOWER(8);
+  JetScapeTask::FinishTasks();
 }
 
 void JetEnergyLoss::Init()
 {
+//  energy_loss_time = 0.; 
   JetScapeModuleBase::Init();
 
   INFO<<"Intialize JetEnergyLoss ..."; 
@@ -267,6 +275,9 @@ void JetEnergyLoss::DoShower()
 
 void JetEnergyLoss::Exec()
 {
+//  time_t t; 
+//  t = clock(); 
+
   INFO<<"Run JetEnergyLoss ...";
   VERBOSE(1)<<"Found "<<GetNumberOfTasks()<<" Eloss Tasks/Modules Execute them ... ";
   //DEBUGTHREAD<<"Task Id = "<<this_thread::get_id()<<" | Run JetEnergyLoss ...";
@@ -292,6 +303,8 @@ void JetEnergyLoss::Exec()
        // Shower handled in this class ...
        DoShower();
         
+   
+  
        pShower->PrintNodes();
        pShower->PrintEdges();
 
@@ -311,7 +324,9 @@ void JetEnergyLoss::Exec()
   else
     {WARN<<"NO Initial Hard Parton for Parton shower received ...";}  
 
-  //DEBUGTHREAD<<"Task Id = "<<this_thread::get_id()<<" Finished!";
+  
+  //  t = clock() - t;
+  //  energy_loss_time += ((float)t) / CLOCKS_PER_SEC;    
   //JetScapeTask::ExecuteTasks(); // prevent Further modules to be execute, everything done by JetEnergyLoss ... (also set the no active flag ...!?)
 }
 
@@ -328,7 +343,6 @@ void JetEnergyLoss::WriteTask(weak_ptr<JetScapeWriter> w)
 
   VERBOSE(4) << " writing partons... found " << pShower->GetNumberOfPartons();
   f->Write(pShower);
-  
 }
 
 void JetEnergyLoss::PrintShowerInitiatingParton()

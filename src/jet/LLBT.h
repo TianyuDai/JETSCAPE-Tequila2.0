@@ -13,7 +13,7 @@
 #include "Tequila/evolve9_text_noExp.h"
 
 using namespace Jetscape;
-	
+
 class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from_this<LLBT>
 {
   private: 
@@ -22,7 +22,6 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
    	double pcut;
    	double M; 
    	double muperp; 
-   	double C; 
    	double mu_scale; 
    	// AMY rates are calculated in p/T > AMYpCut
   	static constexpr double AMYpCut = 4.01;
@@ -48,14 +47,21 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
 	const int NWorkSpace = 200; 
 	const int fKey = 2; 
 	const int Nsteps = 500; 
+	const static size_t nElasProcess = 6; 
+	double max_omega_rate; 
+	double max_qperp_rate; 
 
-	double xa[Nw+1], ya[Nq+1]; 
-	double *za = (double*) malloc((Nw+1) * (Nq+1) * sizeof(double)); 
-	bool flag2 = true; 
+	struct tables
+	{
+		double rate = 1.; 
+		double x[Nw+1], y[Nw+1]; 
+		double xa[Nw+1], ya[Nq+1]; 
+		double zl[Nw+1][Nq+1];  
+	}; 
+	vector <tables> elasticTable; 
+	double *za = (double*) malloc(nElasProcess * (Nw+1) * (Nq+1) * sizeof(double)); 
+	// double *za = new double(nElasProcess * (Nw+1) * (Nq+1)); 
 
-	double x[Nw+1], y[Nw+1]; 
-	bool flag1 = true; 
-	
 	bool is_empty(std::ifstream& pFile); 
 	bool is_exist (const std::string& name); 
 	
@@ -110,7 +116,7 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
 
 	//  double differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T);
 	double differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T, double *** differential_rate_p_omega_qperp);
-	double rate(double energy, double temp, double * rate_p);
+	double rate_inel(double energy, double temp, double * rate_p);
 	void sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q);
 	//  void sample_dgamma_dwdq(const struct ERateParam &pp, const Pythia8::Vec4 &p0, double (*rng)(void*params), void *params,  double &w, double &q);
 	//
@@ -126,16 +132,24 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
 	
 
   public:
-  
+
 	LLBT();
 	virtual ~LLBT();
+/*	static double energy_loss_time_elas; 
+	static double energy_loss_time_inel; 
+	static double tequila_time; 
+	static double omega_sample_time; 
+	static double qperp_sample_time; 
+	static double inel_sample_time; */
 
-  	double Get_Gamma(process_type process); 
+	double rate_conv(process_type process, double T, double pRest); 
+  	void LoadElasticTables(); 
 	double Interpolator_dGamma_domega(double omega, process_type process); 
 	double Extrapolator_dGamma_domega(double omega, process_type process); 
 	double Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process); 
 	
   	void Init();
+	void Finish(); 
   	void DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut);
   	process_type DetermineProcess(double pRest, double T, double deltaTRest, int Id); 
   	FourVector Momentum_Update(double omega, double qperp, double T, FourVector pVec); 
@@ -158,3 +172,4 @@ double dGamma_domega_qperp_k(double k, void *params);
 double dGamma_domega_qperp_k_phi(double phi, void *params); 
 
 #endif
+

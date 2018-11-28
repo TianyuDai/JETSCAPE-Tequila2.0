@@ -153,13 +153,17 @@ double dGamma_domega_qperp_k(double k, void *params)
 	gsl_function F; 
 	switch(p->f_process)
 	{
-		case gg: F.function = dGamma_domega_qperp_k_phi_gggg; 
+		case gg: F.function = dGamma_domega_qperp_k_phi_gg; 
 			 break; 
-		case gq: F.function = dGamma_domega_qperp_k_phi_gqgq; 
+		case gq: F.function = dGamma_domega_qperp_k_phi_gq; 
 			 break; 
-		case qg: F.function = dGamma_domega_qperp_k_phi_qgqg; 
+		case qg: F.function = dGamma_domega_qperp_k_phi_qg; 
 			 break; 
-		case qq: F.function = dGamma_domega_qperp_k_phi_qqqq; 
+		case qq: F.function = dGamma_domega_qperp_k_phi_qq; 
+			 break; 
+		case qqp: F.function = dGamma_domega_qperp_k_phi_qqp; 
+			 break; 
+		case qqb: F.function = dGamma_domega_qperp_k_phi_qqb; 
 			 break; 
 		default: std::cout << "The process determination is wrong! The process is " << p->f_process; 
 			 break; 
@@ -170,7 +174,7 @@ double dGamma_domega_qperp_k(double k, void *params)
 	return result/(2.*M_PI); 
 }
 
-double dGamma_domega_qperp_k_phi_gggg(double phi, void *params)
+double dGamma_domega_qperp_k_phi_gg(double phi, void *params)
 {
 	struct f_params *p = (struct f_params *)params; 
 	IntTabulator cls; 
@@ -189,7 +193,7 @@ double dGamma_domega_qperp_k_phi_gggg(double phi, void *params)
 	return C*M2; 
 }
 
-double dGamma_domega_qperp_k_phi_gqgq(double phi, void *params)
+double dGamma_domega_qperp_k_phi_gq(double phi, void *params)
 {
 	struct f_params *p = (struct f_params *)params; 
 	IntTabulator cls; 
@@ -208,7 +212,7 @@ double dGamma_domega_qperp_k_phi_gqgq(double phi, void *params)
 	return C*M2; 
 }
 
-double dGamma_domega_qperp_k_phi_qgqg(double phi, void *params)
+double dGamma_domega_qperp_k_phi_qg(double phi, void *params)
 {
 	struct f_params *p = (struct f_params *)params; 
 	IntTabulator cls; 
@@ -223,11 +227,11 @@ double dGamma_domega_qperp_k_phi_qgqg(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = 2.*(double)(cls.CF*cls.CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
+	M2 = (double)(cls.CF*cls.CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
 	return C*M2; 
 }
 
-double dGamma_domega_qperp_k_phi_qqqq(double phi, void *params)
+double dGamma_domega_qperp_k_phi_qqp(double phi, void *params)
 {
 	struct f_params *p = (struct f_params *)params; 
 	IntTabulator cls; 
@@ -246,3 +250,78 @@ double dGamma_domega_qperp_k_phi_qqqq(double phi, void *params)
 	return C*M2; 
 }
 
+double dGamma_domega_qperp_k_phi_qq(double phi, void *params)
+{
+	struct f_params *p = (struct f_params *)params; 
+	IntTabulator cls; 
+	double s, t, u, M2, C; 
+	double q, k, kp, qperp, omega; 
+	qperp = p->f_qperp; 
+	k = p->f_k; 
+	omega = p->f_omega;  
+	kp = k + omega; 
+	q = sqrt(qperp*qperp + omega*omega); 
+	t = -1.*pow(qperp, 2); 
+	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	u = -1.*s; 
+	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
+	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	return C*M2; 
+}
+
+double dGamma_domega_qperp_k_phi_qqb(double phi, void *params)
+{
+	struct f_params *p = (struct f_params *)params; 
+	IntTabulator cls; 
+	double s, t, u, M2, C; 
+	double q, k, kp, qperp, omega; 
+	qperp = p->f_qperp; 
+	k = p->f_k; 
+	omega = p->f_omega;  
+	kp = k + omega; 
+	q = sqrt(qperp*qperp + omega*omega); 
+	t = -1.*pow(qperp, 2); 
+	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	u = -1.*s; 
+	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
+	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	return C*M2; 
+}
+/*
+double dGamma_domega_qperp_k_phi_qqbgg(double phi, void *params)
+{
+	struct f_params *p = (struct f_params *)params; 
+	IntTabulator cls; 
+	double s, t, u, M2, C; 
+	double q, k, kp, qperp, omega; 
+	qperp = p->f_qperp; 
+	k = p->f_k; 
+	omega = p->f_omega;  
+	kp = k + omega; 
+	q = sqrt(qperp*qperp + omega*omega); 
+	t = -1.*pow(qperp, 2); 
+	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	u = -1.*s; 
+	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
+	M2 = (double)(2.*cls.CF*cls.CF*u/t)*(2.*nF(k)*(1-nF(k+omega))); 
+	return C*M2; 
+}
+
+double dGamma_domega_qperp_k_phi_qqbp(double phi, void *params)
+{
+	struct f_params *p = (struct f_params *)params; 
+	IntTabulator cls; 
+	double s, t, u, M2, C; 
+	double q, k, kp, qperp, omega; 
+	qperp = p->f_qperp; 
+	k = p->f_k; 
+	omega = p->f_omega;  
+	kp = k + omega; 
+	q = sqrt(qperp*qperp + omega*omega); 
+	t = -1.*pow(qperp, 2); 
+	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	u = -1.*s; 
+	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
+	M2 = (double)(2.*cls.CF*cls.CF*u/t)*(2.*nF(k)*(1-nF(k+omega))); 
+	return C*M2; 
+}*/

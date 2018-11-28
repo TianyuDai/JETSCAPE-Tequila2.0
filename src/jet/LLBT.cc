@@ -30,7 +30,13 @@
 #define hbarc 0.197327053
 
 using namespace Jetscape; 
-
+/*double LLBT::energy_loss_time_elas; 
+double LLBT::energy_loss_time_inel; 
+double LLBT::tequila_time; 
+double LLBT::omega_sample_time; 
+double LLBT::qperp_sample_time; 
+double LLBT::inel_sample_time; 
+int LLBT::vir_num; */
 LLBT::LLBT()
 {
 	SetId("LLBT");
@@ -40,6 +46,28 @@ LLBT::LLBT()
 LLBT::~LLBT()
 {
 	VERBOSE(8);
+}
+
+void LLBT::Finish()
+{
+	free(za); 
+	delete[] rate_ggg_p; 
+	delete[] rate_gqq_p;
+	delete[] rate_qqg_p;
+	for(int ip=0;ip<nb_points_in_p; ip++)
+	{
+		for(int iomega=0;iomega<nb_points_in_omega; iomega++) {
+			 delete[] differential_rate_ggg_p_omega_qperp[ip][iomega];
+			 delete[] differential_rate_gqq_p_omega_qperp[ip][iomega];
+			 delete[] differential_rate_qqg_p_omega_qperp[ip][iomega];
+		}
+		delete[] differential_rate_ggg_p_omega_qperp[ip];
+		delete[] differential_rate_gqq_p_omega_qperp[ip];
+		delete[] differential_rate_qqg_p_omega_qperp[ip];
+	}
+	delete[] differential_rate_ggg_p_omega_qperp;
+	delete[] differential_rate_gqq_p_omega_qperp;
+	delete[] differential_rate_qqg_p_omega_qperp;
 }
 
 void LLBT::Init()
@@ -80,9 +108,10 @@ void LLBT::Init()
   	llbt->FirstChildElement("mass")->QueryDoubleText(&M);
 
 	g = sqrt(4.*M_PI*alpha_s); 
+	// set muperp / T as muperp
+	muperp = mu_scale * sqrt(g); 
 	
 	PathToTables = llbt->FirstChildElement( "elas_path" )->GetText();
-	
 	
   	hydro_Tc = 0.16;
   	llbt->FirstChildElement("hydro_Tc")->QueryDoubleText(&hydro_Tc);
@@ -95,6 +124,13 @@ void LLBT::Init()
  	omega_over_T_cutoff = 1.;
   	llbt->FirstChildElement("omega_over_T_cutoff")->QueryDoubleText(&omega_over_T_cutoff);
 
+	INFO << "Load elastic rate... "; 
+	// Load elastic rate
+	// allocate_memory_for_elastic_rate_table(); 
+	LoadElasticTables(); 
+	INFO << "Finished loading elastic rate! "; 
+	
+
   	// Path to additional data
   	path_to_tables=llbt->FirstChildElement( "rad_path" )->GetText();
 	
@@ -103,29 +139,34 @@ void LLBT::Init()
 	allocate_memory_for_radiative_rate_table();
 
   	// Load differential rate
-  	// WARN << "before loading"; 
-  	std::cout << "Loading differential collinear rate...\n";
+  	INFO << "Loading differential collinear rate...\n";
   	const double alpha_EM=1./137.; //Not currently a parameter
   	const int Nf=3;
   	//const std::string location_of_pretabulated_collinear_rates="./Tequila/";
   	// Either compute or read from file the collinear differential rates and load them into member array "differential_rate_p_omega_qperp[][][]"
   	load_differential_rate(alpha_s, alpha_EM, Nf, path_to_tables);
-    // WARN << "after loading"; 
   	// Compute total rate from differential rate and save in member array "rate_p[]"
-  	std::cout << "Computing integrated collinear rate...\n";
-  	evaluate_integrated_rate(omega_over_T_cutoff, differential_rate_qqg_p_omega_qperp,rate_qqg_p);
-  	// WARN << "computing qqg"; 
+  	INFO << "Computing integrated collinear rate...\n";
+  	evaluate_integrated_rate(omega_over_T_cutoff, differential_rate_qqg_p_omega_qperp,rate_qqg_p); 
   	evaluate_integrated_rate(omega_over_T_cutoff, differential_rate_ggg_p_omega_qperp,rate_ggg_p);
-  	// WARN << "computing ggg"; 
   	evaluate_integrated_rate(omega_over_T_cutoff, differential_rate_gqq_p_omega_qperp,rate_gqq_p);
-  	std::cout << "Done computing integrated collinear rate.\n";
+  	INFO << "Done computing integrated collinear rate.\n";
 
+	/*energy_loss_time_elas = 0.; 
+	energy_loss_time_inel = 0.; 
+	energy_loss_time = 0.; 
+	vir_num = 0; */
 }
 
 void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut)
 {
+	// vir_num++; 
+	// INFO << BOLDYELLOW << vir_num; 
+	// clock_t t1, t2, t3, t4, t5, t; 
+	// t = clock(); 
+	// INFO << BOLDGREEN << "initial time: " << energy_loss_time; 
 	VERBOSESHOWER(5)<< MAGENTA << "SentInPartons Signal received : "<<deltaT<<" "<<Q2<<" "<< pIn.size();
-	int Id, newId;
+	int Id, newId = 21;
   	double pAbs, px, py, pz;   // momentum for initial parton (pIn)
   	double pRest, pxRest;      // momentum in the rest frame of fluid cell (pIn)
   	double pyRest, pzRest;
@@ -136,18 +177,18 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
   	FourVector pVec, pVecNew, pVecNewest;  // 4 vectors for momenta before & after process
   	FourVector xVec;           // 4 vector for position (for next time step!)
   	FourVector pVecRest; 
-  	FourVector kVec;           // 4 vector for momentum of radiated particle
+  	FourVector kVec, kVecNewest;           // 4 vector for momentum of radiated particle
   	double eta;                // pseudo-rapidity
+	double velocity_jet[4];    // jet velocity for MATTER
   	
 	// flow info
   	double vx, vy, vz;         // 3 components of flow velocity
 	double T;                  // Temperature of fluid cell
 	double beta, gamma; 
 	double omega = 0., qperp = 0.; 
-	// WARN << "beginning of the process"; 
+
 	for (int i=0;i<pIn.size();i++)
 	{
-    
     	Id = pIn[i].pid();
 
     	px = pIn[i].px();
@@ -172,18 +213,14 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 		vy = check_fluid_info_ptr->vy;
 		vz = check_fluid_info_ptr->vz;
 		T = check_fluid_info_ptr->temperature;
-		
+		// INFO << BOLDGREEN << "virtuality " << pIn[i].t(); 
 		// Only accept low t particles
-		if (pIn[i].t() > Q0*Q0 + rounding_error || T < hydro_Tc) continue;
+		if (pIn[i].t() > Q0*Q0 + rounding_error || T < hydro_Tc) continue; 
 		TakeResponsibilityFor ( pIn[i] ); // Generate error if another module already has responsibility.
 
 		
 		beta = sqrt( vx*vx + vy*vy + vz*vz );
 		gamma = 1./sqrt(1.-beta*beta); 
-		
-		// set muperp / T as muperp
-		muperp = mu_scale * sqrt(g); 
-		C = pow(g, 4)*T;  
 		
 		// Set momentum in fluid cell's frame
 		fourvec pIn_4vec = fourvec{pAbs, px, py, pz}; 
@@ -194,8 +231,10 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 		pyRest = pVecRest.y(); 
 		pzRest = pVecRest.z(); 
 		if (pRest < pcut) continue; 
-		
-		VERBOSE(8)<< MAGENTA
+		// pOut.push_back(Parton(0, Id, 0, FourVector(pOut_4vec.x(), pOut_4vec.y(), pOut_4vec.z(), pOut_4vec.t()), xVec)); 
+		// return; 
+
+		VERBOSE(8) << MAGENTA
       		<< "Time = " << Time << " Id = " << Id << " T = " << T
       		<< " pAbs = " << pAbs << " " << px << " " << py << " " << pz 
       		<< " | position = " << xx << " " << yy << " " << zz;
@@ -205,22 +244,61 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	double deltaTRest = deltaT / gamma; 
       	process_type process = DetermineProcess(pRest, T, deltaTRest, Id); 
       	xVec = FourVector( xx+px/pAbs*deltaT, yy+py/pAbs*deltaT, zz+pz/pAbs*deltaT, Time+deltaT );
-		
-      	IntTabulator inttabulator; 
+		velocity_jet[0]=1.0;
+    	velocity_jet[1]=pIn[i].jet_v().x();
+    	velocity_jet[2]=pIn[i].jet_v().y();
+    	velocity_jet[3]=pIn[i].jet_v().z();
+
+		IntTabulator inttabulator; 
+		// INFO << BOLDGREEN << "process is " << inttabulator.GetProcessString(process); 
+	//	t1 = 0; 
+	//	t2 = 0; 
+	//	t3 = 0; 
+	//	t4 = 0; 
+	//	t5 = 0; 
       	if (process == none)
       		pVecNew = pVecRest; 
-      	/*else if (process == gg || process == gq || process == qg || process == qq)
+      	else if (process == gg || process == gq || process == qg || process == qq || process == qqp || process == qqb)
       	{
+	//		t1 = clock(); 
+	//		t3 = clock(); 
       		omega = Energy_Transfer(pRest, T, process); 
-      		qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
-      		pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
-      	}*/
+	//		t3 = clock() - t3; 
+	//		t4 = clock();       		
+			qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
+	//		t4 = clock() - t4;       		
+			pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
+	//		t1 = clock() - t1; 
+      	}
+      	else if (process == gqqg)
+      	{
+	//		t1 = clock(); 
+      		double r = ZeroOneDistribution(*GetMt19937Generator());
+			if (r < 1./6.) Id = 1;
+			else if (r < 2./6.) Id = 2;
+			else if (r < 3./6.)Id = 3;
+			else if (r < 4./6.)Id = -1;
+			else if (r < 5./6.)Id = -2;
+			else Id = -3;
+			pVecNew = pVecRest; 
+	//		t1 = clock() - t1; 
+		}
+		else if (process == qggq)
+		{
+	//		t1 = clock(); 
+      		Id = 21; 
+      		pVecNew = pVecRest; 
+	//		t1 = clock() - t1; 
+      	}
       	else if (process == ggg)
       	{
+	//		t2 = clock(); 
       		if (pRest/T < AMYpCut) return;
 
     		// sample radiated parton's momentum
+	//		t5 = clock(); 
     		sample_dgamma_dwdq(pRest, T,differential_rate_ggg_p_omega_qperp, omega, qperp);
+	//		t5 = clock() - t5; 
     		kRest = omega; 
     		// WARN << "process ggg "<<kRest; 
     		//kRest = getNewMomentumRad(pRest, T, process);
@@ -231,49 +309,57 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 
     		// if pNew is smaller than pcut, final state parton is
     		// absorbed into medium
-    		if (pNewRest > pcut)
-				pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
+			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-    		if (kRest > pcut)
-				kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
-
+    		kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			newId = 21; 
+			// WARN << "ggg"; 
+	//		t2 = clock() - t2; 
       	}
 		else if (process == gqq)
 		{
+	//		t2 = clock(); 
 			if (pRest/T < AMYpCut) return;
 
 			// sample radiated parton's momentum
+	//		t5 = clock(); 
 			sample_dgamma_dwdq(pRest, T,differential_rate_gqq_p_omega_qperp, omega, qperp);
+	//		t5 = clock() - t5; 			
 			kRest = omega; 
-			// WARN << "process gqq "<<kRest; 
 			//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
 
 			// final state parton's momentum
 			pNewRest = pRest - kRest;
-
+			
 			// choose the Id of new qqbar pair. Note that we only deal with nf = 3
 			double r = ZeroOneDistribution(*GetMt19937Generator());
-			if (r < 1./3.) newId = 1;
-			else if (r < 2./3.) newId = 2;
-			else newId = 3;
-
+			if (r < 1./6.) Id = 1;
+			else if (r < 2./6.) Id = 2;
+			else if (r < 3./6.) Id = 3;
+			else if (r < 4./6.) Id = -1; 
+			else if (r < 5./6.) Id = -2; 
+			else Id = -3; 
+			
 			// if pNew is smaller than pcut, final state parton is
 			// absorbed into medium
-			if (pNewRest > pcut)
 			// *momentum of quark is usually larger than that of anti-quark
-				pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
+			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-			if (kRest > pcut)
-				kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
-
+			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			newId = -1 * Id; 
+			// WARN << "gqq"; 
+	//		t2 = clock() - t2; 
 		}
 		else if (process == qqg)
 		{
+	//		t2 = clock(); 
 			if (pRest/T < AMYpCut) return;
 
 			// sample radiated parton's momentum
+	//		t5 = clock(); 
 			sample_dgamma_dwdq(pRest, T,differential_rate_qqg_p_omega_qperp, omega, qperp);
+	//		t5 = clock() - t5; 			
 			kRest = omega; 
 			//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
@@ -283,73 +369,84 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 
 			// if pNew is smaller than pcut, final state parton is
 			// absorbed into medium
-			if (pNewRest > pcut)
-				pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pRest, (pzRest/pRest)*pNewRest, pNewRest );
+			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-			if (kRest > pcut)
-				kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			newId = 21; 
+	//		t2 = clock() - t2; 
 		}
 		else pVecNew = pVecRest; 
       	// pVecNew = pVecRest; 
-      	pVecNewest = Langevin_Update(deltaT / hbarc, T, pVecNew, Id); 
-      	// pVecNewest = pVecNew; 
-      	fourvec pOut_4vec = fourvec{pVecNewest.t(), pVecNewest.x(), pVecNewest.y(), pVecNewest.z()}; 
+      	pVecNewest = Langevin_Update(deltaTRest / hbarc, T, pVecNew, Id); 
+		fourvec pOut_4vec, kOut_4vec; 
+      	if (kRest != 0)
+		{
+      		kVecNewest = Langevin_Update(deltaTRest / hbarc, T, kVec, newId); 
+			kOut_4vec = fourvec{kVecNewest.t(), kVecNewest.x(), kVecNewest.y(), kVecNewest.z()}; 
+      		kOut_4vec = kOut_4vec.boost_back(vx, vy, vz); 
+		}
+        // pVecNewest = pVecNew; 
+      	pOut_4vec = fourvec{pVecNewest.t(), pVecNewest.x(), pVecNewest.y(), pVecNewest.z()}; 
       	pOut_4vec = pOut_4vec.boost_back(vx, vy, vz); 
-      	
-      	if (pOut_4vec.t() > pcut)
+
+      	if (pVecNewest.t() > pcut)
       	{
-      		//if (pOut_4vec.t() >= 19.5 && pOut_4vec.t() < 20.) WARN << "The energy p is "<<pOut_4vec.t()<<" The omega is " << omega; 
       		pOut.push_back(Parton(0, Id, 0, FourVector(pOut_4vec.x(), pOut_4vec.y(), pOut_4vec.z(), pOut_4vec.t()), xVec)); 
       		pOut[pOut.size()-1].set_form_time(0.);
+			pOut[pOut.size()-1].set_jet_v(velocity_jet); 
+			// WARN << "pVec id " << Id; 
       	}
-      	if (kRest != 0)
+      	if (kVecNewest.t() > pcut)
       	{
-      		fourvec kOut_4vec = fourvec{kVec.t(), kVec.x(), kVec.y(), kVec.z()}; 
-      		kOut_4vec = kOut_4vec.boost_back(vx, vy, vz); 
-      		// if (kOut_4vec.t() >= 19.5 && kOut_4vec.t() < 20.) WARN << "The energy k is "<<kOut_4vec.t()<<" The omega is " << omega; 
-      		if (kOut_4vec.t() > pcut)
-      		{
-      			pOut.push_back(Parton(0, Id, 0, FourVector(kOut_4vec.x(), kOut_4vec.y(), kOut_4vec.z(), kOut_4vec.t()), xVec));
-				pOut[pOut.size()-1].set_form_time(0.);
-			}
+      		pOut.push_back(Parton(0, newId, 0, FourVector(kOut_4vec.x(), kOut_4vec.y(), kOut_4vec.z(), kOut_4vec.t()), xVec));
+			pOut[pOut.size()-1].set_form_time(0.);
+			pOut[pOut.size()-1].set_jet_v(velocity_jet); 
+			// WARN << "kVec id " << newId; 
       	}
+	 	// t = clock() - t; 
+	//    tequila_time += difftime(Tequila_f,Tequila_i); 
+	// 	energy_loss_time_elas += (float)t1/CLOCKS_PER_SEC; 
+	// 	energy_loss_time_inel += (float)t2/CLOCKS_PER_SEC; 
+	//	tequila_time += (float) t/CLOCKS_PER_SEC; 
+	//	omega_sample_time += (float) t3/CLOCKS_PER_SEC; 
+	//	qperp_sample_time += (float) t4/CLOCKS_PER_SEC;
+		// inel_sample_time += (float) t5/CLOCKS_PER_SEC;
+		// INFO << BOLDYELLOW << "elastic time is " << energy_loss_time_elas << " inelastic time is " << energy_loss_time_inel; 
       	return; 
 	}
 }
 
+// double get_time()
 process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, int Id)
 {
 	double dt = deltaTRest / hbarc; 
 	double rateTotal; 
-	const double rate_gg = Get_Gamma(gg); 
-	const double rate_gq = Get_Gamma(gq); 
-	const double rate_qg = Get_Gamma(qg); 
-	const double rate_qq = Get_Gamma(qq); 
-	const double rate_qqg=rate(pRest, T, rate_qqg_p);
-	const double rate_gqq=rate(pRest, T, rate_gqq_p);
-    const double rate_ggg=rate(pRest, T, rate_ggg_p);
+	double rate[nProcess] = {0.}; 
+	// Elastic rate
+	for (int i = gg; i <= qqb; i++)
+		rate[i] = elasticTable[i].rate * T; 
 
-	// WARN << "rate gg is " << rate_gg << "rate gq is " << rate_gq << "rate qg is " << rate_qg << "rate qq is " << rate_qq; 
-	
+	// Conversion rate
+	for (int i = gqqg; i <= qggq; i++)
+		rate[i] = rate_conv(gqqg, T, pRest);
+
+	// WARN << "gluon elas rate " << rate[0] << " " << rate[1] << " " << rate[6]; 
+	// WARN << "quark elas rate " <<  rate[2] << " " << rate[3] << " " << rate[4] << " " << rate[5] << " " << rate[7]; 
+	// Inelastic rate
+	rate[qqg] = rate_inel(pRest, T, rate_qqg_p); 
+	rate[gqq] = rate_inel(pRest, T, rate_gqq_p); 
+	rate[ggg] = rate_inel(pRest, T, rate_ggg_p); 
+	// WARN << "gluon inel rate " << rate[8] << " " << rate[9]; 
+	// WARN << "quark inel rate " << rate[10]; 
 	if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
 	{
 		double totalQuarkProb = 0.; 
-		if (pRest/T > AMYpCut) totalQuarkProb += rate_qqg*dt;
-		totalQuarkProb += (rate_qg + rate_qq) * dt; 
-		// warn if total probability exceeds 1
-		// WARN << "Total probability for quark is " << totalQuarkProb; 
-      	if (totalQuarkProb > 1.)
-      	{
-      		WARN << " : Total Probability for quark processes exceeds 1 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
-      		/*deltaT = 0.8*hbarc/totalQuarkProb; 
-      		tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
-  	  		dtxml->SetText(deltaT);
-      		WARN << "The new deltaT is set to be " << deltaT; 
-       		totalQuarkProb *= deltaT / hbarc / dt; 
-       		WARN << "The new totalquarkProb is " << totalQuarkProb; 
-      		dt = deltaT / hbarc; */
-      	}
-      		
+		if (pRest/T > AMYpCut)
+			totalQuarkProb += rate[qqg]*dt;
+		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb] + rate[qggq]) * dt; 
+		// warn if total probability exceeds 0.1
+		if (totalQuarkProb > 0.2)
+      		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 	
       		
   		double accumProb = 0.; 
   		double nextProb = 0.; 
@@ -358,15 +455,23 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   		
   		if (randProb < totalQuarkProb)
   		{
-  			Prob = rate_qg * dt; 
+  			Prob = rate[qg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg; 
   			
   			accumProb += Prob; 
-  			Prob = rate_qq * dt; 
+  			Prob = rate[qq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qq; 
+
+			accumProb += Prob; 
+  			Prob = rate[qqp] * dt; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qqp; 
   			
   			accumProb += Prob; 
-  			Prob = rate_qqg * dt; 
+  			Prob = rate[qggq] * dt; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
+  			
+  			accumProb += Prob; 
+  			Prob = rate[qqg] * dt; 
   			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; 
   		}
   		else
@@ -375,21 +480,11 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   	else if (Id == 21)
   	{
   		double totalGluonProb = 0.; 
-  		if (pRest/T > AMYpCut) totalGluonProb += (rate_gqq + rate_ggg)*dt;
-  		totalGluonProb += (rate_gg + rate_gq) * dt; 
-  		// WARN << "Total probability for gluon is " << totalGluonProb; 
-  		if (totalGluonProb > 1.)
-  		{
-  			WARN << " : Total Probability for gluon processes exceeds 1 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
-  			/*deltaT = 0.8*hbarc*dt/totalGluonProb; 
-  			JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
-  			tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
-  	  		dtxml->SetText(deltaT);
-      		WARN << "The new deltaT is set to be " << deltaT; 
-      		totalGluonProb *= deltaT / hbarc / dt; 
-       		WARN << "The new totalgluonProb is " << totalGluonProb; 
-      		dt = deltaT / hbarc; */
-      	}
+  		if (pRest/T > AMYpCut) 
+			totalGluonProb += (rate[gqq] + rate[ggg])*dt;
+  		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg]) * dt; 
+		if (totalGluonProb > 0.2)
+  			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
   		
   		double accumProb = 0.; 
   		double nextProb = 0.; 
@@ -398,24 +493,26 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   		
   		if (randProb < totalGluonProb)
   		{
-  			Prob = rate_gg * dt; 
+  			Prob = rate[gg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gg; 
   			
   			accumProb += Prob; 
-  			Prob = rate_gq * dt; 
+  			Prob = rate[gq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq; 
   			
   			accumProb += Prob; 
-  			Prob = rate_ggg * dt; 
+  			Prob = rate[gqqg] * dt; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
+  			
+  			accumProb += Prob; 
+  			Prob = rate[ggg] * dt; 
   			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return ggg; 
 
 			accumProb += Prob; 
-  			Prob = rate_gqq * dt; 
+  			Prob = rate[gqq] * dt; 
   			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return gqq; 
-
-  		}
-  		else
-  			return none; 
+		}
+  		else return none; 
   	}
   	return none; 
 }
@@ -447,8 +544,9 @@ double LLBT::qpara(double E, double T, int id)
 	double mD = sqrt(std::pow(g*T, 2)*(nc/3. + nf/6.)); 
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
 	double Minf = sqrt(pow(mD, 2)/2.); 
-	return /*std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2. 
-			+ */std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
+	// WARN << " muperp " <<muperp; 
+	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.
+	 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
 
@@ -460,9 +558,9 @@ double LLBT::qperp(double E, double T, int id)
 	else {WARN << "Strange particle! ID = " << id; CR = CF; }
 	double mD = sqrt(std::pow(g*T, 2)*(nc/3. + nf/6.)); 
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
-	// return std::pow(g*mD, 2) * CR * T / (2.*M_PI) * log(1.+pow(muperp*T/mD, 2))/2.;
+	return std::pow(g*mD, 2) * CR * T / (2.*M_PI) * log(1.+pow(muperp*T/mD, 2))/2.;
 	// return std::pow(g*mD, 2) * CR * T / (2.*M_PI) * log(muperp*T/mD); 
-	return 0.; 
+	// return 0.; 
 }
 
 FourVector LLBT::Langevin_Update(double dt, double T, FourVector pIn, int id)
@@ -496,18 +594,19 @@ FourVector LLBT::Langevin_Update(double dt, double T, FourVector pIn, int id)
 double LLBT::TransverseMomentum_Transfer(double pRest, double omega, double T, process_type process)
 {
 	pRest /= T; 
-	// Randomly select initial values of qperp and its rate. 
+	
 	double limitMax = std::min(qperpMax, fabs(pRest-omega));
 	if (limitMax*T < pcut || limitMax < muperp) return 0.;  
-	double qperp = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
-	// WARN << "interpo new " << omega << " " << qperp << " " << process; 
+
+	// Metropolis method
+	// Randomly select initial values of qperp and its rate. 
+/*	double qperp = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
 	double rate_qperp = Interpolator_dGamma_domega_qperp(omega, qperp, process); 
 	double qperpNew, rate_qperpNew, ratio; 
 	
 	for (int step = 0; step < Nsteps; step++)
 	{
 		qperpNew = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
-		// WARN << "interpo " << omega << " " << qperpNew << " " << process; 
 		rate_qperpNew = Interpolator_dGamma_domega_qperp(omega, qperpNew, process); 
 		ratio = rate_qperpNew / rate_qperp; 
 		if (ZeroOneDistribution(*GetMt19937Generator()) < ratio)
@@ -515,7 +614,44 @@ double LLBT::TransverseMomentum_Transfer(double pRest, double omega, double T, p
 			qperp = qperpNew; 
 			rate_qperp = rate_qperpNew; 
 		}
+	}*/
+
+	// Rejection method
+	const int max_try = 10000; 
+	int n_try = 0; 
+	double qperp = 0., qperp_test, rate_qperp_test, max_rate = 0., max_rate2 = 0., r; 
+	// time_t t; 
+	// t = clock(); 
+		// double qp = exp(((double)i)*(log(qperpMax)-log(muperp))/Nq+log(muperp));
+		// double i_rate = Interpolator_dGamma_domega_qperp(omega, qp, process); 
+	int i_omega_index = (atan(omega)-atan(omegaMin))/(atan(kMax)-atan(omegaMin))*Nw; 
+	if (omega < 0) i_omega_index++; 
+	for (size_t j = 0; j < Nq; j++)
+	{
+		double i_rate = exp(elasticTable[process].zl[i_omega_index][j]);
+		if (max_rate < i_rate) max_rate = i_rate; 
 	}
+	// INFO << BOLDGREEN << i_omega_index << " " << max_rate << " " << max_rate2 << " " << omega << " " << process; 
+	max_rate *= 1.5; 
+	// t = clock() - t; 
+	// inel_sample_time += (float) t/CLOCKS_PER_SEC;
+	// INFO << BOLDGREEN << "the max rate is " << max_rate; 
+	while (n_try < max_try)
+	{
+		qperp_test = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
+		rate_qperp_test = Interpolator_dGamma_domega_qperp(omega, qperp_test, process); 
+		r = max_rate * ZeroOneDistribution(*GetMt19937Generator());
+		if (rate_qperp_test > max_rate) WARN << "The sampled rate is larger than the maximum rate we assumed in elastic 2d part!! " << rate_qperp_test << " " << max_rate; 
+		if (r < rate_qperp_test)
+		{
+			qperp = qperp_test; 
+			// INFO << BOLDYELLOW << "the number of small omega trials is " << n_try; 
+			break; 
+		}
+		n_try++; 
+		if (n_try == max_try) WARN << "cannot find a proper qperp in elastic part!!!"; 
+	}
+
 	// The qperp returned by the interpolator is qperp/T
 	return qperp; 
 }
@@ -523,16 +659,15 @@ double LLBT::TransverseMomentum_Transfer(double pRest, double omega, double T, p
 double LLBT::Energy_Transfer(double pRest, double T, process_type process)
 {
 	pRest /= T; 
+	// Metropolis method
 	// Randomly select initial values of omega and its rate. 
-	double omega = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-omegaMin);
-	// WARN << "new omega " << omega; 
+/*	double omega = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-omegaMin);
 	double rate_omega = Interpolator_dGamma_domega(omega, process); 
 	double omegaNew, rate_omegaNew, ratio; 
 	
 	for (int step = 0; step < Nsteps; step++)
 	{
 		omegaNew = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-omegaMin);
-		// WARN << "omega " << omegaNew; 
 		rate_omegaNew = Interpolator_dGamma_domega(omegaNew, process); 
 		ratio = rate_omegaNew / rate_omega; 
 		double rn = ZeroOneDistribution(*GetMt19937Generator()); 
@@ -540,7 +675,38 @@ double LLBT::Energy_Transfer(double pRest, double T, process_type process)
 		{
 			omega = omegaNew; 
 			rate_omega = rate_omegaNew; 
+			// INFO << "new omega " << omega << " " << rate_omega << " " << rn << " " << ratio; 
 		}
+	}*/
+	
+	// Rejection method
+	const int max_try = 10000; 
+	int n_try = 0; 
+	double omega = 0., omega_test, rate_omega_test, max_rate = 0., max_omega, r; 
+	for (size_t i = 0; i < Nw; i++)
+	{
+		double i_rate = exp(elasticTable[process].y[i])/(elasticTable[process].x[i]*elasticTable[process].x[i]+1.); 
+		if (max_rate < i_rate) max_rate = i_rate; 
+	}
+	max_rate *= 1.5; 
+	//INFO << BOLDGREEN << "the max rate is " << max_rate << " " << max_omega; 
+	//max_rate = Interpolator_dGamma_domega(0., process); 
+	//INFO << BOLDGREEN << "the max rate is " << max_rate; 
+	while (n_try < max_try)
+	{
+		omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-omegaMin);
+		rate_omega_test = Interpolator_dGamma_domega(omega_test, process); 
+		if (rate_omega_test > max_rate) WARN << "The sampled rate is larger than the maximum rate we assumed in elastic 1d part!!"; 
+		r = max_rate * ZeroOneDistribution(*GetMt19937Generator());
+		// INFO << BOLDYELLOW << "new omega " << omega_test << " rate " << rate_omega_test << " r " << r; 		
+		if (r < rate_omega_test)
+		{
+			omega = omega_test; 
+			// INFO << BOLDYELLOW << "the number of trials is " << n_try; 
+			break; 
+		}
+		n_try++; 
+		if (n_try == max_try) WARN << "cannot find a proper omega in elastic part!!!"; 
 	}
 	// The omega returned by the interpolator is omega/T
 	return omega; 
@@ -557,43 +723,93 @@ bool LLBT::is_exist (const std::string& name)
 	return (stat (name.c_str(), &buffer) == 0); 
 }
 
-double LLBT::Get_Gamma(process_type process)
+double LLBT::rate_conv(process_type process, double T, double pRest)
+{
+	double m_inf2 = pow(g*T, 2) * CF / 4.; 
+	double rate_base = pow(g, 2) * m_inf2 * CF / (8. * M_PI * pRest) * log(1.+pow(muperp*T, 2)/m_inf2)/2.; 
+	// WARN << rate_base << " " << dF << " " << dA; 
+	if (process == gqqg) return dF/(double)dA*rate_base; 
+	else if (process == qggq) return rate_base; 
+	else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
+}
+
+void LLBT::LoadElasticTables()
 {
 	IntTabulator inttabulator; 
-	if (!is_exist((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Gamma(muperp, PathToTables, process); 
-	std::ifstream table0d_in((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-	if (is_empty(table0d_in)) inttabulator.Gamma(muperp, PathToTables, process); 
-	double gamma; 
-	table0d_in >> gamma; 
-	return gamma*C; 
+	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
+	// Iterate over all the elastic processes
+	INFO << BOLDMAGENTA << "muperp is " << muperp; 
+	for (int iProcess = gg; iProcess <= qqb; iProcess++)
+	{
+		INFO << BOLDYELLOW << "process is " << inttabulator.GetProcessString(iProcess); 
+		process_type process = static_cast<process_type>(iProcess); 
+		tables iTables; 
+
+		if (!is_exist((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Gamma(muperp, PathToTables, process); 
+		std::ifstream table0d_in((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table0d_in)) inttabulator.Gamma(muperp, PathToTables, process); 
+		double gamma; 
+		table0d_in >> gamma; 
+		table0d_in.close(); 
+		// scale over T
+		iTables.rate = pow(g, 4)*gamma; 
+		INFO << BOLDGREEN << "0d table is " << iTables.rate << " g is " << g; 
+
+		if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
+		std::ifstream table1d_in((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
+		for (int iOmega = 0; iOmega <= Nw; iOmega++)
+			table1d_in >> iTables.x[iOmega] >> iTables.y[iOmega]; 
+		table1d_in.close(); 
+
+		if (!is_exist((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
+		std::ifstream table2d_in((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table2d_in)) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
+		double z; 
+    	for (size_t iomega = 0; iomega <= Nw; iomega++)
+    	{
+    		iTables.xa[iomega] = tan(((double)iomega)*(atan(kMax)-atan(omegaMin))/Nw+atan(omegaMin)); 
+    		for (size_t iqperp = 0; iqperp <= Nq; iqperp++)
+    		{
+    			iTables.ya[iqperp] = exp(((double)iqperp)*(log(qperpMax)-log(muperp))/Nq+log(muperp)); 
+    			table2d_in >> z; 
+				iTables.zl[iomega][iqperp] = z; 
+    			// gsl_interp2d_set(interp, iTables.za, iomega, iqperp, z);
+				gsl_interp2d_set(interp, &za[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, z);
+    		}
+    	}
+		table2d_in.close(); 
+		elasticTable.push_back(iTables); 
+		// free(iTables.za); 
+	}
+	gsl_interp2d_free(interp); 
 }
 
 double LLBT::Interpolator_dGamma_domega(double omega, process_type process)
 {
-	IntTabulator inttabulator; 
+	/*IntTabulator inttabulator; 
 	if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
 	std::ifstream table1d_in((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
 	if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
-		
-	gsl_interp_accel *acc = gsl_interp_accel_alloc ();
-    gsl_interp *interp = gsl_interp_alloc (gsl_interp_linear, Nw+1);
-	
 	if (flag1)
 	{
-		for (int i = 0; i <= Nw; i++)
-			table1d_in >> x[i] >> y[i]; 
-		flag1 = false; 
-	}
-	gsl_interp_init (interp, x, y, Nw+1); 
+	for (int i = 0; i <= Nw; i++)
+		table1d_in >> x[i] >> y[i]; 
+	flag1 = false; 
+	}*/
+	gsl_interp_accel *acc = gsl_interp_accel_alloc ();
+    gsl_interp *interp = gsl_interp_alloc (gsl_interp_linear, Nw+1);
+
+	gsl_interp_init (interp, elasticTable[process].x, elasticTable[process].y, Nw+1); 
 	double result; 
-	result = gsl_interp_eval (interp, x, y, omega, acc);  
+	result = gsl_interp_eval (interp, elasticTable[process].x, elasticTable[process].y, omega, acc);  
 	gsl_interp_free (interp); 
 	gsl_interp_accel_free (acc); 
 	return exp(result)/(omega*omega+1.); 
 }
 
 // Linearly extrapolate at the edge
-double LLBT::Extrapolator_dGamma_domega(double omega, process_type process)
+/*double LLBT::Extrapolator_dGamma_domega(double omega, process_type process)
 {
 	IntTabulator inttabulator; 
 	if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
@@ -605,47 +821,30 @@ double LLBT::Extrapolator_dGamma_domega(double omega, process_type process)
     		for (int i = 0; i <= Nw; i++)
     			table1d_in >> x[i] >> y[i]; 
     		flag1 = false; 
-    	}
+    }
 
 	double result; 
 	result = (y[Nw-1] - y[Nw-2]) / (x[Nw-1] - x[Nw-2]) * (omega - y[Nw-1]) + y[Nw-1]; 
 	return exp(result)/(omega*omega+1.); 
 }
+*/
 
 double LLBT::Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process)
-{
-	IntTabulator inttabulator; 
-	if (!is_exist((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
-	std::ifstream table2d_in((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-	if (is_empty(table2d_in)) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
-	
-  	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
+{	
+	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
   	gsl_interp_accel *xacc = gsl_interp_accel_alloc();
   	gsl_interp_accel *yacc = gsl_interp_accel_alloc();
-    	
-    	double z; 
-    	if (flag2)
-    	{
-    		for (size_t i = 0; i <= Nw; i++)
-    		{
-    			xa[i] = tan(((double)i)*(atan(kMax)-atan(omegaMin))/Nw+atan(omegaMin)); 
-    			for (size_t j = 0; j <= Nq; j++)
-    			{
-    				ya[j] = exp(((double)j)*(log(qperpMax)-log(muperp))/Nq+log(muperp)); 
-    				table2d_in >> z; 
-    				if (omega == xa[i] && qperp == ya[j]) return z; 
-    				gsl_interp2d_set(interp, za, i, j, z);
-    			}
-    		}
-    		flag2 = false; 
-    	}
-  	gsl_interp2d_init(interp, xa, ya, za, Nw+1, Nq+1);
-    	double result; 
-    	result = gsl_interp2d_eval(interp, xa, ya, za, omega, qperp, xacc, yacc); 
-    	gsl_interp2d_free(interp);
+
+  	// gsl_interp2d_init(interp, elasticTable[process].xa, elasticTable[process].ya, elasticTable[process].za, Nw+1, Nq+1);
+	gsl_interp2d_init(interp, elasticTable[process].xa, elasticTable[process].ya, &za[process*(Nw+1)*(Nq+1)], Nw+1, Nq+1);
+	// if (omega == elasticTable[iProcess].xa[iqperp] && qperp == elasticTable[iProcess].ya[iqperp]) return z; 
+    double result; 
+    // result = gsl_interp2d_eval(interp, elasticTable[process].xa, elasticTable[process].ya, elasticTable[process].za, omega, qperp, xacc, yacc); 
+	result = gsl_interp2d_eval(interp, elasticTable[process].xa, elasticTable[process].ya, &za[process*(Nw+1)*(Nq+1)], omega, qperp, xacc, yacc); 
+    gsl_interp2d_free(interp);
   	gsl_interp_accel_free(xacc);
   	gsl_interp_accel_free(yacc);
-    	return exp(result); 
+    return exp(result); 
 }
 
 void LLBT::allocate_memory_for_radiative_rate_table() {
@@ -666,7 +865,24 @@ void LLBT::allocate_memory_for_radiative_rate_table() {
 			 differential_rate_gqq_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
 			 differential_rate_qqg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
 		}
-	}
+	}	
+	/*rate_ggg_p = new double [nb_points_in_p];
+	rate_gqq_p = new double [nb_points_in_p];
+	rate_qqg_p = new double [nb_points_in_p];
+	//maximum_differential_rate = new double [nb_points_in_p];
+	differential_rate_ggg_p_omega_qperp = new double ** [nb_points_in_p];
+	differential_rate_gqq_p_omega_qperp = new double ** [nb_points_in_p];
+	differential_rate_qqg_p_omega_qperp = new double ** [nb_points_in_p];
+	for(int ip=0;ip<nb_points_in_p; ip++) {
+		differential_rate_ggg_p_omega_qperp[ip]=new double * [nb_points_in_omega];
+		differential_rate_gqq_p_omega_qperp[ip]=new double * [nb_points_in_omega];
+		differential_rate_qqg_p_omega_qperp[ip]=new double * [nb_points_in_omega];
+		for(int iomega=0;iomega<nb_points_in_omega; iomega++) {
+			 differential_rate_ggg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
+			 differential_rate_gqq_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
+			 differential_rate_qqg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
+		}
+	}*/
 
 }
 
@@ -718,7 +934,6 @@ void LLBT::load_differential_rate(const double alpha_s, const double alpha_EM, c
 		read_table(&Moore_rate_info,&Moore_rate_arrays);
 		std::cout << "Collinear rates read.\n";
 	}
-
 	const double gs4=alpha_s*alpha_s*(16*M_PI*M_PI);
 
 
@@ -854,7 +1069,6 @@ void LLBT::evaluate_integrated_rate(double omega_over_T_cut, double *** differen
 
 	//current omega/T integration not very good if omega_over_T_cut<0.1
 	if (omega_over_T_cut<0.1) std::cout << "Warning: omega/T integration is not very good for omega/T cut-off smaller than 0.1\n";
-	WARN << "omega over T cut is " << omega_over_T_cut; 
 	//loop over all values of "p"
 	for(int ip=0;ip<nb_points_in_p; ip++) {
 
@@ -1016,7 +1230,7 @@ double LLBT::differential_rate(const double p_over_T, const double omega_over_T,
 
 ////Rate
 //double ERateColl::rate(const struct ERateParam &rate_params, const Pythia8::Vec4 &p0, const int &id0)
-double LLBT::rate(double energy, double temp, double * rate_p)
+double LLBT::rate_inel(double energy, double temp, double * rate_p)
 {
 
 //	const double temp=rate_params.T();
@@ -1112,6 +1326,7 @@ void LLBT::sample_dgamma_dwdq(double p, double T, double *** differential_rate_p
 			w=omega_over_T_test*T;
 			q=q_over_T_test*T;
 			//std::cout << p_over_T << " " << w << " " << q << "\n";
+			// INFO << BOLDYELLOW << "number of trials: " << ntry; 
 			return ;
 		}
 		else {

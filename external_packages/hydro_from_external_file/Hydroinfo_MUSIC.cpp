@@ -779,13 +779,13 @@ void Hydroinfo_MUSIC::getHydroValues(double x, double y,
         return;
     }
     if (itau < 0 || itau > itaumax) {
-        cout << "[MARTINI:Hydroinfo_MUSIC::getHydroValues]: WARNING - "
+        /* cout << "[MARTINI:Hydroinfo_MUSIC::getHydroValues]: WARNING - "
              << "tau out of range, itau=" << itau << ", itaumax=" << itaumax
              << endl;
         cout << "[MARTINI:Hydroinfo_MUSIC::getHydroValues]: tau= " << tau
              << ", hydroTauMax = " << hydroTauMax
              << ", hydroDtau = " << hydroDtau << endl;
-
+*/
         info->temperature = 0.0;
         info->vx = 0.0;
         info->vy = 0.0;

@@ -364,12 +364,15 @@ namespace Jetscape {
 	@sa Read about @a polymorphism in C++.
     */
     virtual void Init();
+
     
     /** Calls EvolveHydro(); This explicit call can be used for actual execution of hydrodynamic evolution defined in the modules such as @a Brick, @a MpiMusic, or @a OSU-HYDRO if attached as a @a polymorphic class. It also execute the tasks within the current module.
 	@sa Read about @a polymorphism in C++.
     */
     virtual void Exec();
     
+	virtual void Finish(); 
+
     /// slots for "jet" signals (future)
     virtual void UpdateEnergyDeposit(int t, double edop);
     /// slots for "jet" signals (future)
@@ -425,6 +428,8 @@ namespace Jetscape {
     /** Default function to evolve the hydrodynamics. It can be overridden by different modules. */
     virtual void EvolveHydro() {};
     
+	virtual void FinishHydro() {};
+
     /** Default function to evolve the hydrodynamics by one-time (or tau) step. It can be overridden by different modules.
 	@param jmu An object to a JetSource class.
     */

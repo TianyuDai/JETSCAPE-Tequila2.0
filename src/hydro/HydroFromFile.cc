@@ -28,6 +28,8 @@
 
 using namespace Jetscape;
 
+double HydroFromFile::hydro_time; 
+
 HydroFromFile::HydroFromFile() {
     hydro_status = NOT_START;
     SetId("hydroFromFile");
@@ -94,6 +96,9 @@ void HydroFromFile::read_in_hydro_event(string VISH_filename, int buffer_size,
 void HydroFromFile::read_in_hydro_event(string MUSIC_input_file,
                                     string MUSIC_hydro_ideal_file,
                                     int nskip_tau) {
+//    time_t t; 
+//    t = clock();     
+
     INFO << "read in a MUSIC hydro event from file " << MUSIC_hydro_ideal_file;
     if (hydro_type_ == 2) {
         int hydro_mode = 8;
@@ -118,10 +123,15 @@ void HydroFromFile::read_in_hydro_event(string MUSIC_input_file,
             hydro_shear_file, hydro_bulk_file);
     }
     hydro_status = FINISHED;
+//    t = clock() - t; 
+//    hydro_time += ((float)t) / CLOCKS_PER_SEC; 
 }
 
 
 void HydroFromFile::EvolveHydro() {
+//    time_t t; 
+//    t = clock(); 
+
     if (hydro_status == FINISHED) {
         clean_hydro_event();
         hydro_event_idx_ = ini->GetEventId();
@@ -210,6 +220,8 @@ void HydroFromFile::EvolveHydro() {
         WARN << "main: unrecognized hydro_type = " << hydro_type_;
         exit(1);
     }
+//    t = clock() - t; 
+//    hydro_time += ((float)t) / CLOCKS_PER_SEC; 
 }
 
 
@@ -226,6 +238,17 @@ void HydroFromFile::clean_hydro_event() {
     hydro_status = NOT_START;
 }
 
+void HydroFromFile::FinishHydro()
+{
+	INFO << BOLDYELLOW << "delete pointers"; 
+	if (hydro_type_ == 1) {
+#ifdef USE_HDF5
+    	delete hydroinfo_h5_ptr; 
+#endif
+	}
+     else
+		delete hydroinfo_MUSIC_ptr; 
+}
 
 //! this function returns the thermodynamic and dynamical information at
 //! the given space-time point

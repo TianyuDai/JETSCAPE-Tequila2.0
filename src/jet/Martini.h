@@ -122,7 +122,9 @@ class Martini : public JetEnergyLossModule<Martini> //, public std::enable_share
   vector<double> *dGamma_qg_q;
 
  public:
-  
+  static double martini_time; 
+  static int vir_num; 
+
   Martini();
   virtual ~Martini();
 

@@ -36,6 +36,9 @@ public:
       @param xmlDir: Note that the environment variable PYTHIA8DATA takes precedence! So don't use it.
       @param printBanner: Suppress starting blurb. Should be set to true in production, credit where it's due
   */
+
+  static double pythia_time; 
+
   PythiaGun(string xmlDir = "DONTUSETHIS", bool printBanner = false)
     : Pythia8::Pythia(xmlDir,printBanner), HardProcess()
   {

@@ -99,7 +99,7 @@ class JetScapeTask
 
   /** A virtual function to define a default FinishTasks() function for a JetScapeTask. It can be overridden by different modules/tasks.
    */
-  virtual void FinishTasks() {};
+  virtual void FinishTasks();
   
   /** Recursively write the output information of different tasks/subtasks of a JetScapeTask into a file.
       We use "active_exec" flag to decide whether to write the output in the file or not.

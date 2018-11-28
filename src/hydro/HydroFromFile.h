@@ -48,6 +48,8 @@ class HydroFromFile: public FluidDynamics {
     Hydroinfo_MUSIC *hydroinfo_MUSIC_ptr;
 
  public:
+     static double hydro_time; 
+
      HydroFromFile();
      ~HydroFromFile();
 
@@ -56,7 +58,8 @@ class HydroFromFile: public FluidDynamics {
 
      //! This function initials hydro parameters and read in a hydro event
      void InitializeHydro(Parameter parameter_list);
-
+	
+	 void FinishHydro(); 
 
      //! This function load a VISHNew hydro event
      void read_in_hydro_event(string VISH_filename, int buffer_size,
