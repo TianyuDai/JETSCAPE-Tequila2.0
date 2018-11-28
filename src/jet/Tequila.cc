@@ -122,15 +122,15 @@ void Tequila::Init()
  	omega_over_T_cutoff = 1.;
   	tequila->FirstChildElement("omega_over_T_cutoff")->QueryDoubleText(&omega_over_T_cutoff);
 
+
+  	// Path to additional data
+  	path_to_tables=tequila->FirstChildElement( "tables_path" )->GetText();
+
 	INFO << "Load elastic rate... "; 
 	// Load elastic rate
 	// allocate_memory_for_elastic_rate_table(); 
 	LoadElasticTables(); 
 	INFO << "Finished loading elastic rate! "; 
-	
-
-  	// Path to additional data
-  	path_to_tables=tequila->FirstChildElement( "tables_path" )->GetText();
 	
 	ZeroOneDistribution = uniform_real_distribution<double> { 0.0, 1.0 };
 	
