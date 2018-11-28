@@ -87,7 +87,7 @@ void Tequila::Init()
   	if ( !tequila->FirstChildElement( "pcut" ) )     throw std::runtime_error("Tequila - pcut not properly initialized in XML file ...");
   	if ( !tequila->FirstChildElement( "Q0" ) )     throw std::runtime_error("Tequila - Q0 not properly initialized in XML file ...");
   	if ( !tequila->FirstChildElement( "hydro_Tc" ) )     throw std::runtime_error("Tequila - hydro_Tc not properly initialized in XML file ...");
-  	if ( !tequila->FirstChildElement( "rables_path" ) )     throw std::runtime_error("Tequila - tables_path not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "tables_path" ) )     throw std::runtime_error("Tequila - tables_path not properly initialized in XML file ...");
   	if ( !tequila->FirstChildElement( "omega_over_T_cutoff" ) )     throw std::runtime_error("Tequila - omega not properly initialized in XML file ...");
 
 

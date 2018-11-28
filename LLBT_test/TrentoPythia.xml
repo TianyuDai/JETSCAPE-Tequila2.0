@@ -68,8 +68,8 @@
       <LinesToRead>
       	HardQCD:all = on
       	PartonLevel:FSR = off
-		PDF:useHardNPDFA = off
-		PDF:useHardNPDFB = off
+		PDF:useHardNPDFA = on
+		PDF:useHardNPDFB = on
       </LinesToRead>
     </PythiaGun>     
   </Hard>   

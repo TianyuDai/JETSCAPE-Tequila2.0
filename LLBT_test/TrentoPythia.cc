@@ -52,8 +52,8 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  dtxml->SetText(deltaT);
 
 	// vector <double> pTHatBin{400., 600., 800., 1000., 1380.}; 
-	// vector <double> pTHatBin{5., 10., 20., 40., 60., 80., 110., 160., 210., 260., 310., 400., 500., 600., 800., 1000., 1380.}; 
-	vector <double> pTHatBin{5., 1380.};
+	vector <double> pTHatBin{5., 10., 20., 40., 60., 80., 110., 160., 210., 260., 310., 400., 500., 600., 800., 1000., 1380.}; 
+	// vector <double> pTHatBin{5., 1380.};
 
 	for (unsigned int iBin = 0; iBin < pTHatBin.size() - 1; iBin++)
 	{
@@ -97,7 +97,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 		jetscape->Add(printer);
 
 		// Output
-		auto writer= make_shared<JetScapeWriterAscii> (("./test-PbPb2760/qperp"+std::to_string((int)scale)+"omega"+std::to_string((int)omegacut)+"/"+std::to_string(pTHatBin[iBin])+".dat").c_str());
+		auto writer= make_shared<JetScapeWriterAscii> (("./PbPb2760/qperp"+std::to_string((int)scale)+"omega"+std::to_string((int)omegacut)+"/"+std::to_string(pTHatBin[iBin])+".dat").c_str());
 
 		jetscape->Add(writer);
 
@@ -138,10 +138,10 @@ int main(int argc, char** argv)
 	  for (int j = 0; j < 1; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
-	  	for (int k = 0; k < 1; k++)
+	  	for (int k = 0; k < 3; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-	  		RunEvents(scale, alpha_s, omegacut, 2); 
+	  		RunEvents(scale, alpha_s, omegacut, 10000); 
 	  	}
 	  }
   	}
