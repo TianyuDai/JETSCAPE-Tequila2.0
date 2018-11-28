@@ -1,5 +1,5 @@
-#ifndef LLBT_H
-#define LLBT_H
+#ifndef TEQUILA_H
+#define TEQUILA_H
 
 #include "JetEnergyLossModule.h"
 #include "JetScapeConstants.h"
@@ -14,7 +14,7 @@
 
 using namespace Jetscape;
 
-class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from_this<LLBT>
+class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_shared_from_this<Tequila>
 {
   private: 
 	double alpha_s;
@@ -133,8 +133,8 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
 
   public:
 
-	LLBT();
-	virtual ~LLBT();
+	Tequila();
+	virtual ~Tequila();
 /*	static double energy_loss_time_elas; 
 	static double energy_loss_time_inel; 
 	static double tequila_time; 

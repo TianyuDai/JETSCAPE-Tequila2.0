@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 	  	for (int k = 0; k < 3; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-			std::ofstream jet_output (("../../Result/LLBT/AA/PbPb2760_omega"+std::to_string(omegacut)+"qperp"+std::to_string(scale)+".txt").c_str());
+			std::ofstream jet_output (("../../Result/Tequila/AA/PbPb2760_omega"+std::to_string(omegacut)+"qperp"+std::to_string(scale)+".txt").c_str());
    
 			for (unsigned int iBin = 0; iBin < pTHatBin.size() - 1; iBin++)
 			{

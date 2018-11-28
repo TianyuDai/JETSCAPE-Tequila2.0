@@ -1,4 +1,4 @@
-#include "LLBT.h"
+#include "Tequila.h"
 #include "IntTabulator.h"
 #include "JetScapeLogger.h"
 #include "JetScapeXML.h"
@@ -30,25 +30,25 @@
 #define hbarc 0.197327053
 
 using namespace Jetscape; 
-/*double LLBT::energy_loss_time_elas; 
-double LLBT::energy_loss_time_inel; 
-double LLBT::tequila_time; 
-double LLBT::omega_sample_time; 
-double LLBT::qperp_sample_time; 
-double LLBT::inel_sample_time; 
-int LLBT::vir_num; */
-LLBT::LLBT()
+/*double Tequila::energy_loss_time_elas; 
+double Tequila::energy_loss_time_inel; 
+double Tequila::tequila_time; 
+double Tequila::omega_sample_time; 
+double Tequila::qperp_sample_time; 
+double Tequila::inel_sample_time; 
+int Tequila::vir_num; */
+Tequila::Tequila()
 {
-	SetId("LLBT");
+	SetId("Tequila");
 	VERBOSE(8);
 }
 
-LLBT::~LLBT()
+Tequila::~Tequila()
 {
 	VERBOSE(8);
 }
 
-void LLBT::Finish()
+void Tequila::Finish()
 {
 	free(za); 
 	delete[] rate_ggg_p; 
@@ -70,7 +70,7 @@ void LLBT::Finish()
 	delete[] differential_rate_qqg_p_omega_qperp;
 }
 
-void LLBT::Init()
+void Tequila::Init()
 {
 	INFO<<"Intialize Langevin and Linear Boltzmann ...";
 	
@@ -78,51 +78,49 @@ void LLBT::Init()
   	tinyxml2::XMLElement *eloss= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" );
   	if ( !eloss )     throw std::runtime_error("Eloss not properly initialized in XML file ...");
 
-  	tinyxml2::XMLElement *llbt=eloss->FirstChildElement("LLBT");
+  	tinyxml2::XMLElement *tequila=eloss->FirstChildElement("Tequila");
   	// check that all is there
-  	if ( !llbt )     throw std::runtime_error("LLBT not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "name" ) )     throw std::runtime_error("LLBT - name not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "alpha_s" ) )     throw std::runtime_error("LLBT - alpha_s not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "mu_scale" ) )     throw std::runtime_error("LLBT - mu_scale not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "pcut" ) )     throw std::runtime_error("LLBT - pcut not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "elas_path" ) )     throw std::runtime_error("LLBT - elas_path not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "Q0" ) )     throw std::runtime_error("LLBT - Q0 not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "hydro_Tc" ) )     throw std::runtime_error("LLBT - hydro_Tc not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "rad_path" ) )     throw std::runtime_error("LLBT - rad_path not properly initialized in XML file ...");
-  	if ( !llbt->FirstChildElement( "omega_over_T_cutoff" ) )     throw std::runtime_error("LLBT - omega not properly initialized in XML file ...");
+  	if ( !tequila )     throw std::runtime_error("Tequila not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "name" ) )     throw std::runtime_error("Tequila - name not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "alpha_s" ) )     throw std::runtime_error("Tequila - alpha_s not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "mu_scale" ) )     throw std::runtime_error("Tequila - mu_scale not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "pcut" ) )     throw std::runtime_error("Tequila - pcut not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "Q0" ) )     throw std::runtime_error("Tequila - Q0 not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "hydro_Tc" ) )     throw std::runtime_error("Tequila - hydro_Tc not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "rables_path" ) )     throw std::runtime_error("Tequila - tables_path not properly initialized in XML file ...");
+  	if ( !tequila->FirstChildElement( "omega_over_T_cutoff" ) )     throw std::runtime_error("Tequila - omega not properly initialized in XML file ...");
 
 
-  	string s = llbt->FirstChildElement( "name" )->GetText();
+  	string s = tequila->FirstChildElement( "name" )->GetText();
   	JSDEBUG << s << " to be initilizied ...";
 
   	alpha_s = 0.3;
-  	llbt->FirstChildElement("alpha_s")->QueryDoubleText(&alpha_s);
+  	tequila->FirstChildElement("alpha_s")->QueryDoubleText(&alpha_s);
 
 	mu_scale = 1.;
-  	llbt->FirstChildElement("mu_scale")->QueryDoubleText(&mu_scale);
+  	tequila->FirstChildElement("mu_scale")->QueryDoubleText(&mu_scale);
     
     pcut = 2.0;
-  	llbt->FirstChildElement("pcut")->QueryDoubleText(&pcut);
+  	tequila->FirstChildElement("pcut")->QueryDoubleText(&pcut);
   	
   	M = 0.;
-  	llbt->FirstChildElement("mass")->QueryDoubleText(&M);
+  	tequila->FirstChildElement("mass")->QueryDoubleText(&M);
 
 	g = sqrt(4.*M_PI*alpha_s); 
 	// set muperp / T as muperp
 	muperp = mu_scale * sqrt(g); 
 	
-	PathToTables = llbt->FirstChildElement( "elas_path" )->GetText();
 	
   	hydro_Tc = 0.16;
-  	llbt->FirstChildElement("hydro_Tc")->QueryDoubleText(&hydro_Tc);
+  	tequila->FirstChildElement("hydro_Tc")->QueryDoubleText(&hydro_Tc);
   	
   	Q0 = 1.0;
-  	llbt->FirstChildElement("Q0")->QueryDoubleText(&Q0);
+  	tequila->FirstChildElement("Q0")->QueryDoubleText(&Q0);
 
 
 
  	omega_over_T_cutoff = 1.;
-  	llbt->FirstChildElement("omega_over_T_cutoff")->QueryDoubleText(&omega_over_T_cutoff);
+  	tequila->FirstChildElement("omega_over_T_cutoff")->QueryDoubleText(&omega_over_T_cutoff);
 
 	INFO << "Load elastic rate... "; 
 	// Load elastic rate
@@ -132,7 +130,7 @@ void LLBT::Init()
 	
 
   	// Path to additional data
-  	path_to_tables=llbt->FirstChildElement( "rad_path" )->GetText();
+  	path_to_tables=tequila->FirstChildElement( "tables_path" )->GetText();
 	
 	ZeroOneDistribution = uniform_real_distribution<double> { 0.0, 1.0 };
 	
@@ -158,7 +156,7 @@ void LLBT::Init()
 	vir_num = 0; */
 }
 
-void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut)
+void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut)
 {
 	// vir_num++; 
 	// INFO << BOLDYELLOW << vir_num; 
@@ -417,7 +415,7 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 }
 
 // double get_time()
-process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, int Id)
+process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest, int Id)
 {
 	double dt = deltaTRest / hbarc; 
 	double rateTotal; 
@@ -517,7 +515,7 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   	return none; 
 }
 
-FourVector LLBT::Momentum_Update(double omega, double qperp, double T, FourVector pVec)
+FourVector Tequila::Momentum_Update(double omega, double qperp, double T, FourVector pVec)
 {
 	omega *= T; 
 	qperp *= T; 
@@ -535,7 +533,7 @@ FourVector LLBT::Momentum_Update(double omega, double qperp, double T, FourVecto
 	return pVecNew; 
 }
 
-double LLBT::qpara(double E, double T, int id)
+double Tequila::qpara(double E, double T, int id)
 {
 	double CR; 
 	if (id == 21) CR = CA; 
@@ -550,7 +548,7 @@ double LLBT::qpara(double E, double T, int id)
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
 
-double LLBT::qperp(double E, double T, int id)
+double Tequila::qperp(double E, double T, int id)
 {
 	double CR; 
 	if (id == 21) CR = CA; 
@@ -563,7 +561,7 @@ double LLBT::qperp(double E, double T, int id)
 	// return 0.; 
 }
 
-FourVector LLBT::Langevin_Update(double dt, double T, FourVector pIn, int id)
+FourVector Tequila::Langevin_Update(double dt, double T, FourVector pIn, int id)
 {
 	// imaging rotating to a frame where pIn lies on z-axis
 	double E0 = pIn.t();
@@ -591,7 +589,7 @@ FourVector LLBT::Langevin_Update(double dt, double T, FourVector pIn, int id)
 	return FourVector(pOut.x(), pOut.y(), pOut.z(), pOut.t()); 
 }
 
-double LLBT::TransverseMomentum_Transfer(double pRest, double omega, double T, process_type process)
+double Tequila::TransverseMomentum_Transfer(double pRest, double omega, double T, process_type process)
 {
 	pRest /= T; 
 	
@@ -656,7 +654,7 @@ double LLBT::TransverseMomentum_Transfer(double pRest, double omega, double T, p
 	return qperp; 
 }
 
-double LLBT::Energy_Transfer(double pRest, double T, process_type process)
+double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 {
 	pRest /= T; 
 	// Metropolis method
@@ -712,18 +710,18 @@ double LLBT::Energy_Transfer(double pRest, double T, process_type process)
 	return omega; 
 }
 
-bool LLBT::is_empty(std::ifstream& pFile)
+bool Tequila::is_empty(std::ifstream& pFile)
 {
 	return pFile.peek() == std::ifstream::traits_type::eof();
 }
 
-bool LLBT::is_exist (const std::string& name)
+bool Tequila::is_exist (const std::string& name)
 {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
 }
 
-double LLBT::rate_conv(process_type process, double T, double pRest)
+double Tequila::rate_conv(process_type process, double T, double pRest)
 {
 	double m_inf2 = pow(g*T, 2) * CF / 4.; 
 	double rate_base = pow(g, 2) * m_inf2 * CF / (8. * M_PI * pRest) * log(1.+pow(muperp*T, 2)/m_inf2)/2.; 
@@ -733,7 +731,7 @@ double LLBT::rate_conv(process_type process, double T, double pRest)
 	else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
 }
 
-void LLBT::LoadElasticTables()
+void Tequila::LoadElasticTables()
 {
 	IntTabulator inttabulator; 
 	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
@@ -745,9 +743,9 @@ void LLBT::LoadElasticTables()
 		process_type process = static_cast<process_type>(iProcess); 
 		tables iTables; 
 
-		if (!is_exist((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Gamma(muperp, PathToTables, process); 
-		std::ifstream table0d_in((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-		if (is_empty(table0d_in)) inttabulator.Gamma(muperp, PathToTables, process); 
+		if (!is_exist((path_to_tables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Gamma(muperp, path_to_tables, process); 
+		std::ifstream table0d_in((path_to_tables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table0d_in)) inttabulator.Gamma(muperp, path_to_tables, process); 
 		double gamma; 
 		table0d_in >> gamma; 
 		table0d_in.close(); 
@@ -755,16 +753,16 @@ void LLBT::LoadElasticTables()
 		iTables.rate = pow(g, 4)*gamma; 
 		INFO << BOLDGREEN << "0d table is " << iTables.rate << " g is " << g; 
 
-		if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
-		std::ifstream table1d_in((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-		if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
+		if (!is_exist((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
+		std::ifstream table1d_in((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
 		for (int iOmega = 0; iOmega <= Nw; iOmega++)
 			table1d_in >> iTables.x[iOmega] >> iTables.y[iOmega]; 
 		table1d_in.close(); 
 
-		if (!is_exist((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
-		std::ifstream table2d_in((PathToTables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-		if (is_empty(table2d_in)) inttabulator.Tabulator_dGamma_domega_qperp(muperp, PathToTables, process); 
+		if (!is_exist((path_to_tables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega_qperp(muperp, path_to_tables, process); 
+		std::ifstream table2d_in((path_to_tables+"rate2d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+		if (is_empty(table2d_in)) inttabulator.Tabulator_dGamma_domega_qperp(muperp, path_to_tables, process); 
 		double z; 
     	for (size_t iomega = 0; iomega <= Nw; iomega++)
     	{
@@ -785,12 +783,12 @@ void LLBT::LoadElasticTables()
 	gsl_interp2d_free(interp); 
 }
 
-double LLBT::Interpolator_dGamma_domega(double omega, process_type process)
+double Tequila::Interpolator_dGamma_domega(double omega, process_type process)
 {
 	/*IntTabulator inttabulator; 
-	if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
-	std::ifstream table1d_in((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-	if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
+	if (!is_exist((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
+	std::ifstream table1d_in((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+	if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
 	if (flag1)
 	{
 	for (int i = 0; i <= Nw; i++)
@@ -809,12 +807,12 @@ double LLBT::Interpolator_dGamma_domega(double omega, process_type process)
 }
 
 // Linearly extrapolate at the edge
-/*double LLBT::Extrapolator_dGamma_domega(double omega, process_type process)
+/*double Tequila::Extrapolator_dGamma_domega(double omega, process_type process)
 {
 	IntTabulator inttabulator; 
-	if (!is_exist((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
-	std::ifstream table1d_in((PathToTables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-	if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, PathToTables, process); 
+	if (!is_exist((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
+	std::ifstream table1d_in((path_to_tables+"rate1d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
+	if (is_empty(table1d_in)) inttabulator.Tabulator_dGamma_domega(muperp, path_to_tables, process); 
 	
 	if (flag1)
 	{
@@ -829,7 +827,7 @@ double LLBT::Interpolator_dGamma_domega(double omega, process_type process)
 }
 */
 
-double LLBT::Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process)
+double Tequila::Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process)
 {	
 	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
   	gsl_interp_accel *xacc = gsl_interp_accel_alloc();
@@ -847,7 +845,7 @@ double LLBT::Interpolator_dGamma_domega_qperp(double omega, double qperp, proces
     return exp(result); 
 }
 
-void LLBT::allocate_memory_for_radiative_rate_table() {
+void Tequila::allocate_memory_for_radiative_rate_table() {
 	// Allocate memory for differential and integrated rate
 	rate_ggg_p = new double [nb_points_in_p];
 	rate_gqq_p = new double [nb_points_in_p];
@@ -888,7 +886,7 @@ void LLBT::allocate_memory_for_radiative_rate_table() {
 
 //Load rate differential in incoming parton energy p and radiated parton energy omega (not differential in transverse momentum q)
 //The table contains dGamma/(dx domega)= gs^4*use_table(), where use_table() is the function from Moore's code that tabulates the collinear rate
-void LLBT::load_differential_rate(const double alpha_s, const double alpha_EM, const int Nf, const std::string location_of_collinear_rates) {
+void Tequila::load_differential_rate(const double alpha_s, const double alpha_EM, const int Nf, const std::string location_of_collinear_rates) {
 
 	// Check if the tabulated rate is already available for these parameters
 	// The format is "dGamma_dp_domega_NfX_alphasYYY" where "X" is the number of flavours and "YYY" is the value of alpha_s
@@ -979,7 +977,7 @@ void LLBT::load_differential_rate(const double alpha_s, const double alpha_EM, c
 
 //Find position in array corresponding to value of p_over_T and omega_over_T
 //Matches Moore's code (it must!)
-double LLBT::get_index_from_omega_over_T(const double p_over_T, const double omega_over_T) {
+double Tequila::get_index_from_omega_over_T(const double p_over_T, const double omega_over_T) {
 
 	double b;
 	
@@ -1030,7 +1028,7 @@ double LLBT::get_index_from_omega_over_T(const double p_over_T, const double ome
 
 //Find the value of p_over_T and omega_over_T for a given position in array
 //Matches Moore's code (it must!)
-double LLBT::get_omega_over_T_from_index(const int index_p_over_T, const int index_omega_over_T) {
+double Tequila::get_omega_over_T_from_index(const int index_p_over_T, const int index_omega_over_T) {
 
 	//Need p_over_T to get omega_over_T
 	double p_over_T=get_p_over_T_from_index(index_p_over_T);
@@ -1065,7 +1063,7 @@ double LLBT::get_omega_over_T_from_index(const int index_p_over_T, const int ind
 
 //Evaluated integrated rate, with cut-off "omega_over_T_cut" on omega, from differential rate stored in member object "differential_rate_p_omega_qperp[][]"
 //Also save the maximum value of the rate
-void LLBT::evaluate_integrated_rate(double omega_over_T_cut, double *** differential_rate, double * integrated_rate) {
+void Tequila::evaluate_integrated_rate(double omega_over_T_cut, double *** differential_rate, double * integrated_rate) {
 
 	//current omega/T integration not very good if omega_over_T_cut<0.1
 	if (omega_over_T_cut<0.1) std::cout << "Warning: omega/T integration is not very good for omega/T cut-off smaller than 0.1\n";
@@ -1154,7 +1152,7 @@ void LLBT::evaluate_integrated_rate(double omega_over_T_cut, double *** differen
 // weights for the trapezoid rule on a non-uniform grid
 // 1/2 Sum[f[getQfromIndex[position]]Which[0==position,(getQfromIndex[position+1]-getQfromIndex[position]),size_of_array-1==position,(getQfromIndex[position]-getQfromIndex[position-1]),True,(getQfromIndex[position+1]-getQfromIndex[position-1])],{position,0,Qnum-1}]
 // 1/2 Sum[f[getQfromIndex[position]]Which[0==position,(next_x-curr_x),size_of_array-1==i,(curr_x-prev_x),True,(next_x-prev_x)],{i,0,size_of_array-1}]
-double LLBT::non_uniform_trapeze_weights(int position, int size_of_array, double prev_x, double curr_x, double next_x) {
+double Tequila::non_uniform_trapeze_weights(int position, int size_of_array, double prev_x, double curr_x, double next_x) {
 
 	double weight=0.5;
 	
@@ -1172,7 +1170,7 @@ double LLBT::non_uniform_trapeze_weights(int position, int size_of_array, double
 }
 
 //Returns T^2 dGamma/(dx domega d^2 qperp)
-double LLBT::differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T, double *** differential_rate_p_omega_qperp) {
+double Tequila::differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T, double *** differential_rate_p_omega_qperp) {
 
 
 	//tri-linear interpolation
@@ -1230,7 +1228,7 @@ double LLBT::differential_rate(const double p_over_T, const double omega_over_T,
 
 ////Rate
 //double ERateColl::rate(const struct ERateParam &rate_params, const Pythia8::Vec4 &p0, const int &id0)
-double LLBT::rate_inel(double energy, double temp, double * rate_p)
+double Tequila::rate_inel(double energy, double temp, double * rate_p)
 {
 
 //	const double temp=rate_params.T();
@@ -1267,7 +1265,7 @@ double LLBT::rate_inel(double energy, double temp, double * rate_p)
 }
 
 //Given a value of parton momentum p, sample the rate in omega and qperp
-void LLBT::sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q) {
+void Tequila::sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q) {
 	//   double lam = pp.lambda(p0) ;
 	int ntry = 0  ;
 	const int ntry_max = 10000;   

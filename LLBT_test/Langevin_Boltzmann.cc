@@ -13,7 +13,7 @@
 
 // User modules derived from jetscape framework clasess
 #include "TrentoInitial.h"
-#include "LLBT.h"
+#include "Tequila.h"
 #include "Langevin.h"
 #include "Martini.h"
 #include "Brick.h"
@@ -42,11 +42,11 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	//modify the init.xml file
   	  // JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
 	  JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
-  	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("mu_scale"); 
+  	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("mu_scale"); 
   	  scalexml->SetText(scale);
-  	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("alpha_s");
+  	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("alpha_s");
   	  alphaxml->SetText(alpha_s);
-  	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("omega_over_T_cutoff");
+  	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
   	  // double t = 0.3*0.3/alpha_s/alpha_s; 
   	  // tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
@@ -78,8 +78,8 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  auto jlossmanager = make_shared<JetEnergyLossManager> ();
 	  auto jloss = make_shared<JetEnergyLoss> ();
 
-	  auto llbt = make_shared<LLBT> ();
-	  jloss->Add(llbt);
+	  auto tequila = make_shared<Tequila> ();
+	  jloss->Add(tequila);
 	  // auto martini = make_shared<Martini> ();
 	  // jloss->Add(martini);
 	  // auto langevin = make_shared<Langevin> (); 
@@ -91,7 +91,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro.dat").c_str());
+	  auto writer= make_shared<JetScapeWriterAscii> (("test_200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro.dat").c_str());
 	  jetscape->Add(writer); 
 
 	  time_t start, init; 

@@ -123,8 +123,8 @@
       <mass> 0 </mass>
     </Langevin>
 
-    <LLBT>
-      <name> LLBT </name>
+    <Tequila>
+      <name> Tequila </name>
       <alpha_s> 0.3 </alpha_s>
       <mu_scale> 1. </mu_scale>
       <pcut> 4.01 </pcut>
@@ -132,10 +132,9 @@
       <Q0> 1.0 </Q0>
       <hydro_Tc> 0.16 </hydro_Tc>
       <omega_over_T_cutoff> 0.5 </omega_over_T_cutoff>
-      
-      <rad_path>../src/jet/Tequila/</rad_path>
-      <elas_path>../src/jet/LLBT/</elas_path>
-    </LLBT>
+
+      <tables_path>../src/jet/Tequila/</tables_path>
+    </Tequila>
     
     <AdSCFT>
       <name> AdSCFT </name>

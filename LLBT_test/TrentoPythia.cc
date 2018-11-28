@@ -17,7 +17,7 @@ std::ofstream fout("./PbPb2760/sigmaGen");
 #include "AdSCFT.h"
 #include "Matter.h"
 #include "Martini.h"
-#include "LLBT.h"
+#include "Tequila.h"
 #include "Brick.h"
 #include "GubserHydro.h"
 #include "HydroFromFile.h"
@@ -38,11 +38,11 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 
 	//modify the init.xml file
   	  JetScapeXML::Instance()->OpenXMLFile("TrentoPythia.xml");
-  	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("mu_scale"); 
+  	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("mu_scale"); 
   	  scalexml->SetText(scale);
-  	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("alpha_s");
+  	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("alpha_s");
   	  alphaxml->SetText(alpha_s);
-  	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("LLBT" )->FirstChildElement("omega_over_T_cutoff");
+  	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
 
 	  // JetScapeXML::Instance()->CloseXMLFile();
@@ -81,11 +81,11 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 		auto jlossmanager = make_shared<JetEnergyLossManager> ();
 		auto jloss = make_shared<JetEnergyLoss> ();
 		auto matter = make_shared<Matter> (); 
-		auto llbt = make_shared<LLBT> ();
+		auto tequila = make_shared<Tequila> ();
 		// auto martini = make_shared<Martini> (); 
 
 		jloss->Add(matter); 
-		jloss->Add(llbt);
+		jloss->Add(tequila);
 		// jloss->Add(martini); 
 		jlossmanager->Add(jloss);  
 		jetscape->Add(jlossmanager);
@@ -146,10 +146,10 @@ int main(int argc, char** argv)
 	  }
   	}
 
-/*		cout << "LLBT elastic time " << llbt->energy_loss_time_elas << " inelastic time " << llbt->energy_loss_time_inel << endl; 
-		cout << "elastic omega sampling time " << llbt->omega_sample_time << " elastic qperp sampling time " <<  llbt->qperp_sample_time; 
-		cout << " inelastic omega sampling time " << llbt->inel_sample_time << endl; 
-		cout << "tequila time " << llbt->tequila_time << endl;
+/*		cout << "tequila elastic time " << tequila->energy_loss_time_elas << " inelastic time " << tequila->energy_loss_time_inel << endl; 
+		cout << "elastic omega sampling time " << tequila->omega_sample_time << " elastic qperp sampling time " <<  tequila->qperp_sample_time; 
+		cout << " inelastic omega sampling time " << tequila->inel_sample_time << endl; 
+		cout << "tequila time " << tequila->tequila_time << endl;
 		cout << "martini time " << martini->martini_time << endl;
 		// cout << "pythia time " << pythiaGun->pythia_time << endl;  
 		cout << "matter time " << matter->matter_time << endl; 
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
 		cout << "energy loss time " << jloss->energy_loss_time << endl;
 		cout << "manager time " << jlossmanager->manager_time << endl; 
 		cout << "number of high vir particles in Matter: " << matter->k << endl; 
-		cout << "radiated high vir num: " << llbt->vir_num << endl; 
+		cout << "radiated high vir num: " << tequila->vir_num << endl; 
 		// For the future, cleanup is mostly already done in write and clear
 		t3 = clock(); 
 		t3 = clock() - t3; */
