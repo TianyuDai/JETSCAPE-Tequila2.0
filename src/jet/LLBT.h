@@ -22,10 +22,6 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
    	double pcut;
    	double M; 
    	double muperp; 
-<<<<<<< HEAD
-=======
-   	// double C; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
    	double mu_scale; 
    	// AMY rates are calculated in p/T > AMYpCut
   	static constexpr double AMYpCut = 4.01;
@@ -147,11 +143,7 @@ class LLBT : public JetEnergyLossModule<LLBT> //, public std::enable_shared_from
 	static double inel_sample_time; */
 
 	double rate_conv(process_type process, double T, double pRest); 
-<<<<<<< HEAD
   	void LoadElasticTables(); 
-=======
-  	double rate_elas(process_type process, double T); 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 	double Interpolator_dGamma_domega(double omega, process_type process); 
 	double Extrapolator_dGamma_domega(double omega, process_type process); 
 	double Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process); 

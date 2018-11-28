@@ -42,11 +42,6 @@ LLBT::LLBT()
 	SetId("LLBT");
 	VERBOSE(8);
 }
-LLBT::LLBT()
-{
-	SetId("LLBT");
-	VERBOSE(8);
-}
 
 LLBT::~LLBT()
 {
@@ -227,13 +222,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 		beta = sqrt( vx*vx + vy*vy + vz*vz );
 		gamma = 1./sqrt(1.-beta*beta); 
 		
-<<<<<<< HEAD
-=======
-		// set muperp / T as muperp
-		muperp = mu_scale * sqrt(g); 
-		// C = pow(g, 4)*T;  
-		
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 		// Set momentum in fluid cell's frame
 		fourvec pIn_4vec = fourvec{pAbs, px, py, pz}; 
 		fourvec pIn_cell = pIn_4vec.boost_to(vx, vy, vz); 
@@ -256,7 +244,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	double deltaTRest = deltaT / gamma; 
       	process_type process = DetermineProcess(pRest, T, deltaTRest, Id); 
       	xVec = FourVector( xx+px/pAbs*deltaT, yy+py/pAbs*deltaT, zz+pz/pAbs*deltaT, Time+deltaT );
-<<<<<<< HEAD
 		velocity_jet[0]=1.0;
     	velocity_jet[1]=pIn[i].jet_v().x();
     	velocity_jet[2]=pIn[i].jet_v().y();
@@ -272,19 +259,10 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	if (process == none)
       		pVecNew = pVecRest; 
       	else if (process == gg || process == gq || process == qg || process == qq || process == qqp || process == qqb)
-=======
-		// WARN << "After set up"; 
-		// WARN << "process is " <<process; 
-      	IntTabulator inttabulator; 
-      	if (process == none)
-      		pVecNew = pVecRest; 
-      	else if (process == gg || process == gq || process == qg || process == qq)
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       	{
 	//		t1 = clock(); 
 	//		t3 = clock(); 
       		omega = Energy_Transfer(pRest, T, process); 
-<<<<<<< HEAD
 	//		t3 = clock() - t3; 
 	//		t4 = clock();       		
 			qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
@@ -295,13 +273,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	else if (process == gqqg)
       	{
 	//		t1 = clock(); 
-=======
-      		qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
-      		pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
-      	}
-      	else if (process == gqqg)
-      	{   
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       		double r = ZeroOneDistribution(*GetMt19937Generator());
 			if (r < 1./6.) Id = 1;
 			else if (r < 2./6.) Id = 2;
@@ -309,7 +280,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 			else if (r < 4./6.)Id = -1;
 			else if (r < 5./6.)Id = -2;
 			else Id = -3;
-<<<<<<< HEAD
 			pVecNew = pVecRest; 
 	//		t1 = clock() - t1; 
 		}
@@ -321,16 +291,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 	//		t1 = clock() - t1; 
       	}
       	else if (process == ggg)
-=======
-			pVecNew = pVec; 
-		}
-		else if (process == qggq)
-		{
-      		Id = 21; 
-      		pVecNew = pVec; 
-      	}
-      	/*else if (process == ggg)
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       	{
 	//		t2 = clock(); 
       		if (pRest/T < AMYpCut) return;
@@ -353,11 +313,8 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 
     		kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
 			newId = 21; 
-<<<<<<< HEAD
 			// WARN << "ggg"; 
 	//		t2 = clock() - t2; 
-=======
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       	}
 		else if (process == gqq)
 		{
@@ -377,18 +334,12 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 			
 			// choose the Id of new qqbar pair. Note that we only deal with nf = 3
 			double r = ZeroOneDistribution(*GetMt19937Generator());
-<<<<<<< HEAD
 			if (r < 1./6.) Id = 1;
 			else if (r < 2./6.) Id = 2;
 			else if (r < 3./6.) Id = 3;
 			else if (r < 4./6.) Id = -1; 
 			else if (r < 5./6.) Id = -2; 
 			else Id = -3; 
-=======
-			if (r < 1./3.) Id = 1;
-			else if (r < 2./3.) Id = 2;
-			else Id = 3;
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 			
 			// if pNew is smaller than pcut, final state parton is
 			// absorbed into medium
@@ -397,11 +348,8 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 
 			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
 			newId = -1 * Id; 
-<<<<<<< HEAD
 			// WARN << "gqq"; 
 	//		t2 = clock() - t2; 
-=======
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 		}
 		else if (process == qqg)
 		{
@@ -425,7 +373,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 
 			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
 			newId = 21; 
-<<<<<<< HEAD
 	//		t2 = clock() - t2; 
 		}
 		else pVecNew = pVecRest; 
@@ -442,18 +389,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	pOut_4vec = fourvec{pVecNewest.t(), pVecNewest.x(), pVecNewest.y(), pVecNewest.z()}; 
       	pOut_4vec = pOut_4vec.boost_back(vx, vy, vz); 
 
-=======
-		}*/
-		else pVecNew = pVecRest; 
-      	// pVecNew = pVecRest; 
-      	// pVecNewest = Langevin_Update(deltaTRest / hbarc, T, pVecNew, Id); 
-      	if (kRest != 0)
-      		kVecNewest = Langevin_Update(deltaTRest / hbarc, T, kVec, newId); 
-      	pVecNewest = pVecNew; 
-      	fourvec pOut_4vec = fourvec{pVecNewest.t(), pVecNewest.x(), pVecNewest.y(), pVecNewest.z()}; 
-      	pOut_4vec = pOut_4vec.boost_back(vx, vy, vz); 
-      	// WARN << "hey"; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       	if (pVecNewest.t() > pcut)
       	{
       		pOut.push_back(Parton(0, Id, 0, FourVector(pOut_4vec.x(), pOut_4vec.y(), pOut_4vec.z(), pOut_4vec.t()), xVec)); 
@@ -463,7 +398,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
       	}
       	if (kVecNewest.t() > pcut)
       	{
-<<<<<<< HEAD
       		pOut.push_back(Parton(0, newId, 0, FourVector(kOut_4vec.x(), kOut_4vec.y(), kOut_4vec.z(), kOut_4vec.t()), xVec));
 			pOut[pOut.size()-1].set_form_time(0.);
 			pOut[pOut.size()-1].set_jet_v(velocity_jet); 
@@ -478,14 +412,6 @@ void LLBT::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>& p
 	//	qperp_sample_time += (float) t4/CLOCKS_PER_SEC;
 		// inel_sample_time += (float) t5/CLOCKS_PER_SEC;
 		// INFO << BOLDYELLOW << "elastic time is " << energy_loss_time_elas << " inelastic time is " << energy_loss_time_inel; 
-=======
-      		fourvec kOut_4vec = fourvec{kVecNewest.t(), kVecNewest.x(), kVecNewest.y(), kVecNewest.z()}; 
-      		kOut_4vec = kOut_4vec.boost_back(vx, vy, vz); 
-      		pOut.push_back(Parton(0, newId, 0, FourVector(kOut_4vec.x(), kOut_4vec.y(), kOut_4vec.z(), kOut_4vec.t()), xVec));
-			pOut[pOut.size()-1].set_form_time(0.);
-      	}
-      	// WARN << "After push back"; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       	return; 
 	}
 }
@@ -495,7 +421,6 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
 {
 	double dt = deltaTRest / hbarc; 
 	double rateTotal; 
-<<<<<<< HEAD
 	double rate[nProcess] = {0.}; 
 	// Elastic rate
 	for (int i = gg; i <= qqb; i++)
@@ -522,39 +447,6 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
 		// warn if total probability exceeds 0.1
 		if (totalQuarkProb > 0.2)
       		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 	
-=======
-	const double rate_gg = rate_elas(gg, T); 
-	const double rate_gq = rate_elas(gq, T); 
-	const double rate_qg = rate_elas(qg, T); 
-	const double rate_qq = rate_elas(qq, T); 
-	const double rate_gqqg = rate_conv(gqqg, T, pRest); 
-	const double rate_qggq = rate_conv(qggq, T, pRest); 
-	const double rate_qqg = rate_inel(pRest, T, rate_qqg_p);
-	const double rate_gqq = rate_inel(pRest, T, rate_gqq_p);
-    const double rate_ggg = rate_inel(pRest, T, rate_ggg_p);
-
-	// WARN << "rate gg is " << rate_gg << "rate gq is " << rate_gq << "rate qg is " << rate_qg << "rate qq is " << rate_qq; 
-	
-	if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
-	{
-		double totalQuarkProb = 0.; 
-		if (pRest/T > AMYpCut) totalQuarkProb += rate_qqg*dt;
-		totalQuarkProb += (rate_qg + rate_qq + rate_qggq) * dt; 
-		// warn if total probability exceeds 1
-		// WARN << "Total probability for quark is " << totalQuarkProb; 
-      	if (totalQuarkProb > 0.2)
-      	{
-      		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
-      		/*deltaT = 0.8*hbarc/totalQuarkProb; 
-      		tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
-  	  		dtxml->SetText(deltaT);
-      		WARN << "The new deltaT is set to be " << deltaT; 
-       		totalQuarkProb *= deltaT / hbarc / dt; 
-       		WARN << "The new totalquarkProb is " << totalQuarkProb; 
-      		dt = deltaT / hbarc; */
-      	}
-      		
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
       		
   		double accumProb = 0.; 
   		double nextProb = 0.; 
@@ -579,15 +471,7 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
   			
   			accumProb += Prob; 
-<<<<<<< HEAD
   			Prob = rate[qqg] * dt; 
-=======
-  			Prob = rate_qggq * dt; 
-  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
-  			
-  			accumProb += Prob; 
-  			Prob = rate_qqg * dt; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
   			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; 
   		}
   		else
@@ -596,31 +480,11 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   	else if (Id == 21)
   	{
   		double totalGluonProb = 0.; 
-<<<<<<< HEAD
   		if (pRest/T > AMYpCut) 
 			totalGluonProb += (rate[gqq] + rate[ggg])*dt;
   		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg]) * dt; 
 		if (totalGluonProb > 0.2)
   			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
-=======
-  		if (pRest/T > AMYpCut) totalGluonProb += (rate_gqq + rate_ggg)*dt;
-  		// WARN << "Total inelastic probability " << totalGluonProb; 
-  		totalGluonProb += (rate_gg + rate_gq + rate_gqqg) * dt; 
-  		// WARN << "The probability of conversion process is " << (rate_gqqg) * dt; 
-  		// WARN << "Total elastic probability " << (rate_gg + rate_gq+rate_gqqg) * dt; 
-  		if (totalGluonProb > 0.2)
-  		{
-  			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
-  			/*deltaT = 0.8*hbarc*dt/totalGluonProb; 
-  			JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
-  			tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
-  	  		dtxml->SetText(deltaT);
-      		WARN << "The new deltaT is set to be " << deltaT; 
-      		totalGluonProb *= deltaT / hbarc / dt; 
-       		WARN << "The new totalgluonProb is " << totalGluonProb; 
-      		dt = deltaT / hbarc; */
-      	}
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
   		
   		double accumProb = 0.; 
   		double nextProb = 0.; 
@@ -637,19 +501,11 @@ process_type LLBT::DetermineProcess(double pRest, double T, double deltaTRest, i
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq; 
   			
   			accumProb += Prob; 
-<<<<<<< HEAD
   			Prob = rate[gqqg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
   			
   			accumProb += Prob; 
   			Prob = rate[ggg] * dt; 
-=======
-  			Prob = rate_gqqg * dt; 
-  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
-  			
-  			accumProb += Prob; 
-  			Prob = rate_ggg * dt; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
   			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return ggg; 
 
 			accumProb += Prob; 
@@ -689,13 +545,8 @@ double LLBT::qpara(double E, double T, int id)
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
 	double Minf = sqrt(pow(mD, 2)/2.); 
 	// WARN << " muperp " <<muperp; 
-<<<<<<< HEAD
 	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.
 	 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
-=======
-	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.; 
-			/*+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));*/
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
 
@@ -882,7 +733,6 @@ double LLBT::rate_conv(process_type process, double T, double pRest)
 	else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
 }
 
-<<<<<<< HEAD
 void LLBT::LoadElasticTables()
 {
 	IntTabulator inttabulator; 
@@ -933,17 +783,6 @@ void LLBT::LoadElasticTables()
 		// free(iTables.za); 
 	}
 	gsl_interp2d_free(interp); 
-=======
-double LLBT::rate_elas(process_type process, double T)
-{
-	IntTabulator inttabulator; 
-	if (!is_exist((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str())) inttabulator.Gamma(muperp, PathToTables, process); 
-	std::ifstream table0d_in((PathToTables+"rate0d_table"+"_muperp"+std::to_string(muperp)+inttabulator.GetProcessString(process)+".dat").c_str()); 
-	if (is_empty(table0d_in)) inttabulator.Gamma(muperp, PathToTables, process); 
-	double gamma; 
-	table0d_in >> gamma; 
-	return pow(g, 4)*T*gamma; 
->>>>>>> 8f4eb8e9c76a713ad281979d4a74d2a559fdc3fe
 }
 
 double LLBT::Interpolator_dGamma_domega(double omega, process_type process)
@@ -1499,3 +1338,4 @@ void LLBT::sample_dgamma_dwdq(double p, double T, double *** differential_rate_p
 	std::cout << "*** ERateColl::sample_dgamma_dwdq *** Failed to find a sample "
 		"after "<< ntry  << " iterations! Returning with w,q = " << w<<","<< q << std::endl;
 }
+
