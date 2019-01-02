@@ -231,13 +231,15 @@ void HydroFromFile::clean_hydro_event() {
     if (hydro_type_ == 1) {
 #ifdef USE_HDF5
         hydroinfo_h5_ptr->clean_hydro_event();
+		delete hydroinfo_h5_ptr; 
 #endif
     } else {
         hydroinfo_MUSIC_ptr->clean_hydro_event();
+		delete hydroinfo_MUSIC_ptr; 
     }
     hydro_status = NOT_START;
 }
-
+/*
 void HydroFromFile::FinishHydro()
 {
 	INFO << BOLDYELLOW << "delete pointers"; 
@@ -249,7 +251,7 @@ void HydroFromFile::FinishHydro()
      else
 		delete hydroinfo_MUSIC_ptr; 
 }
-
+*/
 //! this function returns the thermodynamic and dynamical information at
 //! the given space-time point
 void HydroFromFile::GetHydroInfo(

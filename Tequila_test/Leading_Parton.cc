@@ -27,8 +27,8 @@ using namespace Jetscape;
 int main(int argc, char** argv)
 {
   double scale_list[1] = {1.}; 
-  double alpha_list[1] = {0.3}; 
-  double omegacut_list[3] = {0.5, 1., 2.}; 
+  double alpha_list[2] = {0.005, 0.32}; 
+  double omegacut_list[1] = {2.}; 
 
   double jetpTMin = 20., jetRadius = 0.4, partonpTMin = 20.; 
 
@@ -40,30 +40,30 @@ int main(int argc, char** argv)
   {
   	  
 	  double scale = scale_list[ii]; 
-	  for (int jj = 0; jj < 1; jj++)
+	  for (int jj = 0; jj < 2; jj++)
 	  {
 	  	double alpha_s = alpha_list[jj]; 
-		for (int kk = 0; kk < 3; kk++)
+		for (int kk = 0; kk < 1; kk++)
 		{
 		  double omegacut = omegacut_list[kk]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro.dat"); 
-		  std::ofstream jet_output (("../../Result/Tequila/total/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro_partons.txt").c_str()); 
+		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.dat"); 
+		  std::ofstream jet_output (("../../Result/Tequila/elas/small_coupling_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.txt").c_str()); 
 
 		  while (!reader->Finished())
 			{ 
 			  reader->Next();
-			 /* fjInputs.resize(0);          
+			  fjInputs.resize(0);          
 		  	  vector <fjcore::PseudoJet> inclusiveJets, sortedJets; 
 		  	  fjcore::ClusterSequence clustSeq(reader->GetPartonsForFastJet(), jetDef); 
    		  	  inclusiveJets = clustSeq.inclusive_jets(jetpTMin); 
 			  vector <fjcore::PseudoJet> selected_jets = select_pt(inclusiveJets); 
-		  	  sortedJets = fjcore::sorted_by_pt(selected_jets);*/ 
+		  	  sortedJets = fjcore::sorted_by_pt(selected_jets);
 			  vector <shared_ptr <Parton> > partons; 
 			  partons = reader->GetPartons(); 
 			  double energy = 0.; 
 			  for (unsigned int i = 0; i < partons.size(); i++)
 			  // 	if  (sortedJets[i].e() > energy) energy = sortedJets[i].e(); 
-			   	if  (partons[i]->e() > energy/* && partons[i]->pid() == 21*/) energy = partons[i]->e(); 
+			   	if  (partons[i]->e() > energy && partons[i]->pid() == 21) energy = partons[i]->e(); 
 			  jet_output << energy << "\n"; 
 			 }
 		  reader->Close(); 

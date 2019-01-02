@@ -175,7 +175,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
   	FourVector pVec, pVecNew, pVecNewest;  // 4 vectors for momenta before & after process
   	FourVector xVec;           // 4 vector for position (for next time step!)
   	FourVector pVecRest; 
-  	FourVector kVec, kVecNewest;           // 4 vector for momentum of radiated particle
+  	FourVector kVec, kVecRest, kVecNewest;           // 4 vector for momentum of radiated particle
   	double eta;                // pseudo-rapidity
 	double velocity_jet[4];    // jet velocity for MATTER
   	
@@ -184,7 +184,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 	double T;                  // Temperature of fluid cell
 	double beta, gamma; 
 	double omega = 0., qperp = 0.; 
-
+// WARN << "normal here! "; 
 	for (int i=0;i<pIn.size();i++)
 	{
     	Id = pIn[i].pid();
@@ -240,37 +240,76 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
       	// Pass the address of deltaT to DetermineProcess, if deltaT is changed, the changed value could be passed back. Calculate xVec after passing back the real deltaT. 
       	// time step should be in the rest frame. 
       	double deltaTRest = deltaT / gamma; 
-      	process_type process = DetermineProcess(pRest, T, deltaTRest, Id); 
+      	// process_type process = DetermineProcess(pRest, T, deltaTRest, Id); 
       	xVec = FourVector( xx+px/pAbs*deltaT, yy+py/pAbs*deltaT, zz+pz/pAbs*deltaT, Time+deltaT );
 		velocity_jet[0]=1.0;
     	velocity_jet[1]=pIn[i].jet_v().x();
     	velocity_jet[2]=pIn[i].jet_v().y();
     	velocity_jet[3]=pIn[i].jet_v().z();
-
-		IntTabulator inttabulator; 
+// WARN << "normal here! "; 
+		/*IntTabulator inttabulator; 
 		// INFO << BOLDGREEN << "process is " << inttabulator.GetProcessString(process); 
-	//	t1 = 0; 
-	//	t2 = 0; 
-	//	t3 = 0; 
-	//	t4 = 0; 
-	//	t5 = 0; 
       	if (process == none)
       		pVecNew = pVecRest; 
       	else if (process == gg || process == gq || process == qg || process == qq || process == qqp || process == qqb)
       	{
-	//		t1 = clock(); 
-	//		t3 = clock(); 
       		omega = Energy_Transfer(pRest, T, process); 
-	//		t3 = clock() - t3; 
-	//		t4 = clock();       		
 			qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
-	//		t4 = clock() - t4;       		
 			pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
-	//		t1 = clock() - t1; 
-      	}
-      	else if (process == gqqg)
-      	{
-	//		t1 = clock(); 
+			// kRest = omega*T; 
+			// kVecRest.Set(0., 0., 0.0001, 0.0001); 
+			// kVec = Momentum_Update(-omega, -qperp, T, kVecRest); 
+			// INFO << BOLDGREEN << "recoil particle: " << kVec.x() << " " << kVec.y() << " " << kVec.z() << " " << kVec.t(); 
+			// INFO << BOLDYELLOW << "initial particle: " << pVecRest.x() << " " << pVecRest.y() << " " << pVecRest.z() << " " << pVecRest.t(); 
+			// INFO << BOLDMAGENTA << "new particle: " << pVecNew.x() << " " << pVecNew.y() << " " << pVecNew.z() << " " << pVecNew.t(); 
+			// double kRestsum = sqrt(pow(pxRest - pVecNew.x(), 2) + pow(pyRest - pVecNew.y(), 2) + pow(pzRest - pVecNew.z(), 2)); 
+			// kVec.Set( (pxRest-pVecNew.x())/kRestsum*kRest, (pyRest-pVecNew.y())/kRestsum*kRest, (pzRest-pVecNew.z())/kRestsum*kRest, kRest );
+			// INFO << BOLDGREEN << "radiated energy " << kRest*kRest << " " << pow(kVec.x(), 2)+pow(kVec.y(), 2)+pow(kVec.z(), 2); 
+			// INFO << BOLDYELLOW << "radiated energy " << omega*T << " " << pRest - pVecNew.t(); 
+			if (process == gg || process == qg) newId = 21; 
+			if (process == gq)
+			{
+				double r = ZeroOneDistribution(*GetMt19937Generator());
+                if (r < 1./6.) newId = 1; 
+                else if (r < 2./6.) newId = 2;
+                else if (r < 3./6.) newId = 3;
+                else if (r < 4./6.) newId = -1;
+                else if (r < 5./6.) newId = -2;
+                else newId = -3;
+			}
+			if (process == qq) newId = Id; 
+			if (process == qqp)
+			{
+				if (abs(Id) == 1)
+				{
+					double r = ZeroOneDistribution(*GetMt19937Generator());
+                    if (r < 1./4.) newId = 2;
+                    else if (r < 2./4.) newId = 3;
+                    else if (r < 3./4.) newId = -2;
+                    else newId = -3;
+				}
+				if (abs(Id) == 2)
+                {
+                    double r = ZeroOneDistribution(*GetMt19937Generator());
+                    if (r < 1./4.) newId = 1; 
+                    else if (r < 2./4.) newId = 3;
+                    else if (r < 3./4.) newId = -1;
+                    else newId = -3;
+                }
+				if (abs(Id) == 3)
+                {
+                    double r = ZeroOneDistribution(*GetMt19937Generator());
+                    if (r < 1./4.) newId = 2; 
+                    else if (r < 2./4.) newId = 1;
+                    else if (r < 3./4.) newId = -2;
+                    else newId = -1;
+                }
+				
+			}
+			if (process == qqb) newId = Id * -1;*/
+		//}
+      	/*else if (process == gqqg || process == gq_inel_conv)
+      	{ 
       		double r = ZeroOneDistribution(*GetMt19937Generator());
 			if (r < 1./6.) Id = 1;
 			else if (r < 2./6.) Id = 2;
@@ -279,27 +318,19 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 			else if (r < 5./6.)Id = -2;
 			else Id = -3;
 			pVecNew = pVecRest; 
-	//		t1 = clock() - t1; 
 		}
-		else if (process == qggq)
+		else if (process == qggq || process == qg_inel_conv)
 		{
-	//		t1 = clock(); 
       		Id = 21; 
-      		pVecNew = pVecRest; 
-	//		t1 = clock() - t1; 
+      		pVecNew = pVecRest;  
       	}
       	else if (process == ggg)
-      	{
-	//		t2 = clock(); 
+      	{ 
       		if (pRest/T < AMYpCut) return;
 
     		// sample radiated parton's momentum
-	//		t5 = clock(); 
     		sample_dgamma_dwdq(pRest, T,differential_rate_ggg_p_omega_qperp, omega, qperp);
-	//		t5 = clock() - t5; 
     		kRest = omega; 
-    		// WARN << "process ggg "<<kRest; 
-    		//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
 
     		// final state parton's momentum
@@ -309,22 +340,16 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
     		// absorbed into medium
 			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-    		kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+    		kVec.Set( (pxRest/pRest)*kRest, (pyRest/pRest)*kRest, (pzRest/pRest)*kRest, kRest );
 			newId = 21; 
-			// WARN << "ggg"; 
-	//		t2 = clock() - t2; 
       	}
 		else if (process == gqq)
 		{
-	//		t2 = clock(); 
 			if (pRest/T < AMYpCut) return;
 
 			// sample radiated parton's momentum
-	//		t5 = clock(); 
-			sample_dgamma_dwdq(pRest, T,differential_rate_gqq_p_omega_qperp, omega, qperp);
-	//		t5 = clock() - t5; 			
+			sample_dgamma_dwdq(pRest, T,differential_rate_gqq_p_omega_qperp, omega, qperp);		
 			kRest = omega; 
-			//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
 
 			// final state parton's momentum
@@ -344,20 +369,15 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 			// *momentum of quark is usually larger than that of anti-quark
 			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			kVec.Set( (pxRest/pRest)*kRest, (pyRest/pRest)*kRest, (pzRest/pRest)*kRest, kRest );
 			newId = -1 * Id; 
-			// WARN << "gqq"; 
-	//		t2 = clock() - t2; 
 		}
 		else if (process == qqg)
 		{
-	//		t2 = clock(); 
 			if (pRest/T < AMYpCut) return;
 
 			// sample radiated parton's momentum
-	//		t5 = clock(); 
-			sample_dgamma_dwdq(pRest, T,differential_rate_qqg_p_omega_qperp, omega, qperp);
-	//		t5 = clock() - t5; 			
+			sample_dgamma_dwdq(pRest, T,differential_rate_qqg_p_omega_qperp, omega, qperp);		
 			kRest = omega; 
 			//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
@@ -367,18 +387,18 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 
 			// if pNew is smaller than pcut, final state parton is
 			// absorbed into medium
-			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pRest, (pzRest/pRest)*pNewRest, pNewRest );
+			pVecNew.Set( (pxRest/pRest)*pNewRest, (pyRest/pRest)*pNewRest, (pzRest/pRest)*pNewRest, pNewRest );
 
-			kVec.Set( (px/pAbs)*kRest, (py/pAbs)*kRest, (pz/pAbs)*kRest, kRest );
+			kVec.Set( (pxRest/pRest)*kRest, (pyRest/pRest)*kRest, (pzRest/pRest)*kRest, kRest );
 			newId = 21; 
-	//		t2 = clock() - t2; 
 		}
-		else pVecNew = pVecRest; 
-      	// pVecNew = pVecRest; 
+		else pVecNew = pVecRest; */
+      	pVecNew = pVecRest; 
       	pVecNewest = Langevin_Update(deltaTRest / hbarc, T, pVecNew, Id); 
 		fourvec pOut_4vec, kOut_4vec; 
       	if (kRest != 0)
 		{
+			// kVecNewest = kVec; 
       		kVecNewest = Langevin_Update(deltaTRest / hbarc, T, kVec, newId); 
 			kOut_4vec = fourvec{kVecNewest.t(), kVecNewest.x(), kVecNewest.y(), kVecNewest.z()}; 
       		kOut_4vec = kOut_4vec.boost_back(vx, vy, vz); 
@@ -392,14 +412,14 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
       		pOut.push_back(Parton(0, Id, 0, FourVector(pOut_4vec.x(), pOut_4vec.y(), pOut_4vec.z(), pOut_4vec.t()), xVec)); 
       		pOut[pOut.size()-1].set_form_time(0.);
 			pOut[pOut.size()-1].set_jet_v(velocity_jet); 
-			// WARN << "pVec id " << Id; 
+		// if (Id != 21)  WARN << "pVec id " << Id; 
       	}
       	if (kVecNewest.t() > pcut)
       	{
       		pOut.push_back(Parton(0, newId, 0, FourVector(kOut_4vec.x(), kOut_4vec.y(), kOut_4vec.z(), kOut_4vec.t()), xVec));
 			pOut[pOut.size()-1].set_form_time(0.);
 			pOut[pOut.size()-1].set_jet_v(velocity_jet); 
-			// WARN << "kVec id " << newId; 
+		// if (Id != 21) WARN << "kVec id " << newId; 
       	}
 	 	// t = clock() - t; 
 	//    tequila_time += difftime(Tequila_f,Tequila_i); 
@@ -425,23 +445,27 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 		rate[i] = elasticTable[i].rate * T; 
 
 	// Conversion rate
-	for (int i = gqqg; i <= qggq; i++)
-		rate[i] = rate_conv(gqqg, T, pRest);
+	for (int i = gqqg; i <= qg_inel_conv; i++)
+	{
+		process_type iProcess = static_cast<process_type>(i); 
+		rate[i] = rate_conv(iProcess, T, pRest);
+		// WARN << "conversion rate: " << rate[i]; 
+	}
 
-	// WARN << "gluon elas rate " << rate[0] << " " << rate[1] << " " << rate[6]; 
-	// WARN << "quark elas rate " <<  rate[2] << " " << rate[3] << " " << rate[4] << " " << rate[5] << " " << rate[7]; 
+	// WARN << "gluon elas rate " << rate[0] << " " << rate[1] << " " << rate[9]; 
+	// WARN << "quark elas rate " <<  rate[2] << " " << rate[3] << " " << rate[4] << " " << rate[5] << " " << rate[10]; 
 	// Inelastic rate
 	rate[qqg] = rate_inel(pRest, T, rate_qqg_p); 
 	rate[gqq] = rate_inel(pRest, T, rate_gqq_p); 
 	rate[ggg] = rate_inel(pRest, T, rate_ggg_p); 
-	// WARN << "gluon inel rate " << rate[8] << " " << rate[9]; 
-	// WARN << "quark inel rate " << rate[10]; 
+	// WARN << "gluon inel rate " << rate[6] << " " << rate[7] << " " << rate[11]; 
+	// WARN << "quark inel rate " << rate[8] << " " << rate[12]; 
 	if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
 	{
 		double totalQuarkProb = 0.; 
 		if (pRest/T > AMYpCut)
 			totalQuarkProb += rate[qqg]*dt;
-		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb] + rate[qggq]) * dt; 
+		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb] + rate[qggq] + rate[qg_inel_conv]) * dt; 
 		// warn if total probability exceeds 0.1
 		if (totalQuarkProb > 0.2)
       		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 	
@@ -467,6 +491,10 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			accumProb += Prob; 
   			Prob = rate[qggq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
+
+			accumProb += Prob; 
+  			Prob = rate[qg_inel_conv] * dt; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg_inel_conv; 
   			
   			accumProb += Prob; 
   			Prob = rate[qqg] * dt; 
@@ -480,7 +508,7 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   		double totalGluonProb = 0.; 
   		if (pRest/T > AMYpCut) 
 			totalGluonProb += (rate[gqq] + rate[ggg])*dt;
-  		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg]) * dt; 
+  		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg] + rate[gq_inel_conv]) * dt; 
 		if (totalGluonProb > 0.2)
   			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
   		
@@ -501,6 +529,10 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			accumProb += Prob; 
   			Prob = rate[gqqg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
+
+			accumProb += Prob; 
+  			Prob = rate[gq_inel_conv] * dt; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq_inel_conv; 
   			
   			accumProb += Prob; 
   			Prob = rate[ggg] * dt; 
@@ -522,6 +554,7 @@ FourVector Tequila::Momentum_Update(double omega, double qperp, double T, FourVe
 	double p = pVec.t(); 
 	double pp = p - omega; 
 	double sintheta = fabs(qperp/pp); 
+	// WARN << sintheta; 
 	double phi = 2.*M_PI*ZeroOneDistribution(*GetMt19937Generator()); 
 	fourvec pOut, pIn; 
 	FourVector pVecNew; 
@@ -530,6 +563,7 @@ FourVector Tequila::Momentum_Update(double omega, double qperp, double T, FourVe
 	pOut = fourvec{fabs(pp), fabs(pp)*sintheta*cos(phi), fabs(pp)*sintheta*sin(phi), pp*sqrt(1-sintheta*sintheta)}; 
 	pOut = pOut.rotate_back(pIn); 
 	pVecNew = FourVector(pOut.x(), pOut.y(), pOut.z(), pOut.t()); 
+	// WARN << pOut.x()*pOut.x()+pOut.y()*pOut.y()+pOut.z()*pOut.z() << " " << pOut.t()*pOut.t(); 
 	return pVecNew; 
 }
 
@@ -542,9 +576,8 @@ double Tequila::qpara(double E, double T, int id)
 	double mD = sqrt(std::pow(g*T, 2)*(nc/3. + nf/6.)); 
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
 	double Minf = sqrt(pow(mD, 2)/2.); 
-	// WARN << " muperp " <<muperp; 
-	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.
-	 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
+	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.; 
+//	 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
 
@@ -592,10 +625,11 @@ FourVector Tequila::Langevin_Update(double dt, double T, FourVector pIn, int id)
 double Tequila::TransverseMomentum_Transfer(double pRest, double omega, double T, process_type process)
 {
 	pRest /= T; 
-	
+	// if (fabs(pRest-omega)*T < pcut || (pRest-omega) < muperp) return 0; 	
 	double limitMax = std::min(qperpMax, fabs(pRest-omega));
+	// limitMax = std::min(limitMax, fabs(omega)); 
 	if (limitMax*T < pcut || limitMax < muperp) return 0.;  
-
+	
 	// Metropolis method
 	// Randomly select initial values of qperp and its rate. 
 /*	double qperp = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
@@ -649,13 +683,14 @@ double Tequila::TransverseMomentum_Transfer(double pRest, double omega, double T
 		n_try++; 
 		if (n_try == max_try) WARN << "cannot find a proper qperp in elastic part!!!"; 
 	}
-
+	// INFO << BOLDWHITE << "qperp " << qperp << " omega " << omega << " muperp " << muperp; 
 	// The qperp returned by the interpolator is qperp/T
 	return qperp; 
 }
 
 double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 {
+	// WARN << "one sample";
 	pRest /= T; 
 	// Metropolis method
 	// Randomly select initial values of omega and its rate. 
@@ -680,20 +715,25 @@ double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 	// Rejection method
 	const int max_try = 10000; 
 	int n_try = 0; 
-	double omega = 0., omega_test, rate_omega_test, max_rate = 0., max_omega, r; 
+	double omega = 0., omega_test=0., rate_omega_test, max_rate = 0., max_omega, r; 
 	for (size_t i = 0; i < Nw; i++)
 	{
 		double i_rate = exp(elasticTable[process].y[i])/(elasticTable[process].x[i]*elasticTable[process].x[i]+1.); 
+		// if (max_rate < i_rate && (elasticTable[process].x[i] > muperp || elasticTable[process].x[i] < -muperp)) max_rate = i_rate; 
 		if (max_rate < i_rate) max_rate = i_rate; 
 	}
 	max_rate *= 1.5; 
-	//INFO << BOLDGREEN << "the max rate is " << max_rate << " " << max_omega; 
+	// INFO << BOLDGREEN << "the max rate is " << max_rate; 
 	//max_rate = Interpolator_dGamma_domega(0., process); 
 	//INFO << BOLDGREEN << "the max rate is " << max_rate; 
 	while (n_try < max_try)
 	{
+		// while (omega_test < muperp && omega_test > -muperp)
 		omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-omegaMin);
+		// omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-2*muperp-omegaMin);
+		// if (omega_test > -muperp) omega_test += 2*muperp; 
 		rate_omega_test = Interpolator_dGamma_domega(omega_test, process); 
+		// INFO << n_try << " sampled omega " << omega_test << " " << rate_omega_test<< " " << max_rate; 
 		if (rate_omega_test > max_rate) WARN << "The sampled rate is larger than the maximum rate we assumed in elastic 1d part!!"; 
 		r = max_rate * ZeroOneDistribution(*GetMt19937Generator());
 		// INFO << BOLDYELLOW << "new omega " << omega_test << " rate " << rate_omega_test << " r " << r; 		
@@ -706,6 +746,7 @@ double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 		n_try++; 
 		if (n_try == max_try) WARN << "cannot find a proper omega in elastic part!!!"; 
 	}
+	// INFO << BOLDWHITE << omega << " " << muperp;
 	// The omega returned by the interpolator is omega/T
 	return omega; 
 }
@@ -724,11 +765,24 @@ bool Tequila::is_exist (const std::string& name)
 double Tequila::rate_conv(process_type process, double T, double pRest)
 {
 	double m_inf2 = pow(g*T, 2) * CF / 4.; 
-	double rate_base = pow(g, 2) * m_inf2 * CF / (8. * M_PI * pRest) * log(1.+pow(muperp*T, 2)/m_inf2)/2.; 
-	// WARN << rate_base << " " << dF << " " << dA; 
-	if (process == gqqg) return dF/(double)dA*rate_base; 
-	else if (process == qggq) return rate_base; 
-	else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
+	double m_D2 = pow(g*T, 2) * (nc/3. + nf/6.); 
+	if (process == gqqg || process == qggq)
+	{
+		double rate_base = pow(g, 2) * m_inf2 * CF / (8. * M_PI * pRest) * log(1.+pow(muperp*T, 2)/m_inf2)/2.; 
+		// INFO << BOLDGREEN << "T " << T << " p " << pRest << " g " << g  << " m^2 " << m_inf2 << " log " << log(1.+pow(muperp*T, 2)/m_inf2)/2. << " rate " << rate_base; 
+		if (process == gqqg) return dF/(double)dA*rate_base; 
+		else if (process == qggq) return rate_base; 
+		else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
+	}
+	else
+	{
+		double rate_base = pow(g, 4) * pow(T, 2) * CF * omega_over_T_cutoff * (2-log(2)) * m_D2 / (32. * pow(M_PI, 3) * m_inf2); 
+		// INFO << BOLDYELLOW << "p " << pRest << " rate " << rate_base; 
+		if (process == gq_inel_conv) return rate_base/2.; 
+		else if (process == qg_inel_conv) return rate_base*CF; 
+		else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
+	}
+	// else {WARN << "Invalid conversion process " << std::to_string(process); return 0.; }
 }
 
 void Tequila::LoadElasticTables()

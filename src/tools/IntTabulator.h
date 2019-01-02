@@ -5,8 +5,9 @@
 #include <fstream>
 
 // qqb is qqbar->qqbar, qqp is qq'->qq', qqbp is qqbar->q'qbar', qqbgg is qqbar->gg
-enum process_type {gg, gq, qg, qq, qqp, qqb, gqqg, qggq, ggg, gqq, qqg, none}; 
-const static size_t nProcess = 12; 
+// gq_inel_conv and qg_inel_conv are conversion processes of inelasic part. 
+enum process_type {gg, gq, qg, qq, qqp, qqb, ggg, gqq, qqg, gqqg, qggq, gq_inel_conv, qg_inel_conv, none}; 
+const static size_t nProcess = 14; 
 	
 struct f_params
 {
@@ -38,7 +39,7 @@ class IntTabulator
 	const double omegaMin = -1.*kMax/2.; 
 	const double qperpMax = 2*sqrt(kMax*kMax+kMax*omegaMin); 
 	// double cls_muperp; 
-	std::string ProcessStrings[nProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "gqqg", "qggq", "ggg", "gqq", "qqg", "none"}; 
+	std::string ProcessStrings[nProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "ggg", "gqq", "qqg", "gqqg", "qggq", "gq_inel_conv", "qg_inel_conv", "none"}; 
   	
 
  public: 

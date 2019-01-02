@@ -124,13 +124,14 @@ namespace Jetscape {
     EvolveHydro();  
     JetScapeTask::ExecuteTasks();
   }
-
+/*
   void FluidDynamics::Finish()
   {
 	INFO << BOLDGREEN << "run finish of fluid dynamics"; 
 	FinishHydro(); 
+	WARN << "after finish hydro"; 
   }
-
+*/
   void FluidDynamics::UpdateEnergyDeposit(int t, double edop) {
     //sigslot::lock_block<multi_threaded_local> lock(this);
     JSDEBUG<<MAGENTA<<"Jet Signal received : "<<t<<" "<<edop;

@@ -51,7 +51,9 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
   	  dtxml->SetText(deltaT);
 
-	vector <double> pTHatBin{5., 10., 20., 40., 60., 80., 110., 160., 210., 260., 310., 400., 500., 600., 800., 1000., 1380.}; 
+	// vector <double> pTHatBin{400., 600., 800., 1000., 1380.}; 
+	// vector <double> pTHatBin{80., 110., 160., 210., 260., 310., 400., 500., 600., 800., 1000., 1380.}; 
+	vector <double> pTHatBin{20., 50., 80., 110., 160., 210., 260., 310., 400., 500., 600., 800., 1000., 1380.}; 
 	// vector <double> pTHatBin{5., 1380.};
 
 	for (unsigned int iBin = 0; iBin < pTHatBin.size() - 1; iBin++)
@@ -66,7 +68,29 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 		jetscape->SetNReuseHydro (1000000);
 
 		// Initial conditions and hydro
+		// auto trento = make_shared<TrentoInitial> ();
 		auto pythiaGun = make_shared<PythiaGun> ();
+		// auto pGun = make_shared<PGun> ();
+		auto hydro = make_shared<HydroFromFile> ();
+		// auto hydro = make_shared<Brick> ();
+		// jetscape->Add(trento);
+		jetscape->Add(pythiaGun);
+		// jetscape->Add(pGun);
+		jetscape->Add(hydro);
+
+		// Energy loss
+		auto jlossmanager = make_shared<JetEnergyLossManager> ();
+		auto jloss = make_shared<JetEnergyLoss> ();
+		auto matter = make_shared<Matter> (); 
+		auto tequila = make_shared<Tequila> ();
+		// auto martini = make_shared<Martini> (); 
+
+		jloss->Add(matter); 
+		jloss->Add(tequila);
+		// jloss->Add(martini); 
+		jlossmanager->Add(jloss);  
+		jetscape->Add(jlossmanager);
+
 
 		// Hadronization
 		// This helper module currently needs to be added for hadronization.
@@ -74,7 +98,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 		jetscape->Add(printer);
 
 		// Output
-		auto writer= make_shared<JetScapeWriterAscii> (("./pp2760/"+std::to_string(pTHatBin[iBin])+".dat").c_str());
+		auto writer= make_shared<JetScapeWriterAscii> (("./PbPb2760/qperp"+std::to_string((int)scale)+"omega"+std::to_string((int)omegacut)+"/"+std::to_string(pTHatBin[iBin])+".dat").c_str());
 
 		jetscape->Add(writer);
 
@@ -107,7 +131,7 @@ int main(int argc, char** argv)
 
 	double scale_list[1] = {1.}; 
   	double alpha_list[1] = {0.3}; 
-  	double omegacut_list[3] = {1.}; 
+  	double omegacut_list[3] = {0.5, 1., 2.}; 
 	for (int i = 0; i < 1; i++)
   	{
   	  
@@ -123,10 +147,10 @@ int main(int argc, char** argv)
 	  }
   	}
 
-/*		cout << "Tequila elastic time " << Tequila->energy_loss_time_elas << " inelastic time " << Tequila->energy_loss_time_inel << endl; 
-		cout << "elastic omega sampling time " << Tequila->omega_sample_time << " elastic qperp sampling time " <<  Tequila->qperp_sample_time; 
-		cout << " inelastic omega sampling time " << Tequila->inel_sample_time << endl; 
-		cout << "tequila time " << Tequila->tequila_time << endl;
+/*		cout << "tequila elastic time " << tequila->energy_loss_time_elas << " inelastic time " << tequila->energy_loss_time_inel << endl; 
+		cout << "elastic omega sampling time " << tequila->omega_sample_time << " elastic qperp sampling time " <<  tequila->qperp_sample_time; 
+		cout << " inelastic omega sampling time " << tequila->inel_sample_time << endl; 
+		cout << "tequila time " << tequila->tequila_time << endl;
 		cout << "martini time " << martini->martini_time << endl;
 		// cout << "pythia time " << pythiaGun->pythia_time << endl;  
 		cout << "matter time " << matter->matter_time << endl; 
@@ -138,7 +162,7 @@ int main(int argc, char** argv)
 		cout << "energy loss time " << jloss->energy_loss_time << endl;
 		cout << "manager time " << jlossmanager->manager_time << endl; 
 		cout << "number of high vir particles in Matter: " << matter->k << endl; 
-		cout << "radiated high vir num: " << Tequila->vir_num << endl; 
+		cout << "radiated high vir num: " << tequila->vir_num << endl; 
 		// For the future, cleanup is mostly already done in write and clear
 		t3 = clock(); 
 		t3 = clock() - t3; */

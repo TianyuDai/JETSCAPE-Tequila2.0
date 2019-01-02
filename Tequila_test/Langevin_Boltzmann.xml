@@ -78,7 +78,7 @@
 
     <deltaT>0.01</deltaT>
     <formTime> -0.1</formTime>
-    <maxT>20</maxT>
+    <maxT>1</maxT>
 
 
     <Matter>
@@ -124,7 +124,7 @@
       <name> Tequila </name>
       <alpha_s> 0.3 </alpha_s>
       <mu_scale> 1. </mu_scale>
-      <pcut> 2.0 </pcut>
+      <pcut> 4.01 </pcut>
       <mass> 0 </mass>
       <Q0> 1.0 </Q0>
       <hydro_Tc> 0.16 </hydro_Tc>

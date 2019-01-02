@@ -396,11 +396,14 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 
 ### Run Jetscape
 
-add_executable(Langevin_Boltzmann ./LLBT_test/Langevin_Boltzmann.cc)
+add_executable(Langevin_Boltzmann ./Tequila_test/Langevin_Boltzmann.cc)
 target_link_libraries(Langevin_Boltzmann JetScape )
 
-add_executable(TrentoPythia ./LLBT_test/TrentoPythia.cc)
+add_executable(TrentoPythia ./Tequila_test/TrentoPythia.cc)
 target_link_libraries(TrentoPythia JetScape )
+
+add_executable(pp ./Tequila_test/pp.cc)
+target_link_libraries(pp JetScape )
 
 #if(${HDF5_FOUND})
 #  add_executable(hydroFileTest ./examples/hydroFileTest.cc)
@@ -418,14 +421,17 @@ target_link_libraries(TrentoPythia JetScape )
 
 ### Read Jetscape output
 
-add_executable(pureglue ./LLBT_test/pureglue.cc)
+add_executable(pureglue ./Tequila_test/pureglue.cc)
 target_link_libraries(pureglue JetScape )
 
-add_executable(Leading_Parton ./LLBT_test/Leading_Parton.cc)
+add_executable(Leading_Parton ./Tequila_test/Leading_Parton.cc)
 target_link_libraries(Leading_Parton JetScape )
 
-add_executable(RAA ./LLBT_test/RAA.cc)
+add_executable(RAA ./Tequila_test/RAA.cc)
 target_link_libraries(RAA JetScape )
+
+add_executable(pp_distribution ./Tequila_test/pp_distribution.cc)
+target_link_libraries(pp_distribution JetScape )
 
 # executables with additional dependencies
 if (freestream AND music)
@@ -452,8 +458,8 @@ endif (music AND iSS )
 
 # -----------------------------------------------------------
 #### copy jetscape_init.xml to build/, such that one can test xml reading in build/ directory
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LLBT_test/Langevin_Boltzmann.xml DESTINATION ${CMAKE_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/LLBT_test/TrentoPythia.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Tequila_test/Langevin_Boltzmann.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Tequila_test/TrentoPythia.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #### copy essential files for MUSIC to build/
 if (freestream)

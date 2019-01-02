@@ -371,7 +371,7 @@ namespace Jetscape {
     */
     virtual void Exec();
     
-	virtual void Finish(); 
+	// virtual void Finish(); 
 
     /// slots for "jet" signals (future)
     virtual void UpdateEnergyDeposit(int t, double edop);

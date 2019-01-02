@@ -48,9 +48,10 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  alphaxml->SetText(alpha_s);
   	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
-  	  // double t = 0.3*0.3/alpha_s/alpha_s; 
-  	  // tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
-  	  // lenthxml->SetText(t);
+
+  	  double t = 0.3*0.3/alpha_s/alpha_s; 
+  	  tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
+  	  lenthxml->SetText(t);
 	  // JetScapeXML::Instance()->CloseXMLFile();
 	  
 	  double deltaT = 0.01; 
@@ -63,13 +64,11 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->SetNReuseHydro(1000000); 
 	  // jetscape->SetId("primary");
 
-	  auto trento = make_shared<TrentoInitial>();
-	  auto pythiaGun= make_shared<PythiaGun> ();
+	  // auto trento = make_shared<TrentoInitial>();
+	  // auto pythiaGun= make_shared<PythiaGun> ();
 	  auto pGun= make_shared<PGun> ();
-	  // auto hydro = make_shared<Brick> (); 
-	  auto hydro = make_shared<HydroFromFile> ();
-	  // jetscape->Add(trento);
-	  // jetscape->Add(pythiaGun);
+	  auto hydro = make_shared<Brick> (); 
+	  // auto hydro = make_shared<HydroFromFile> ();
 	  jetscape->Add(pGun); 
 	  jetscape->Add(hydro); 
 
@@ -80,10 +79,6 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 
 	  auto tequila = make_shared<Tequila> ();
 	  jloss->Add(tequila);
-	  // auto martini = make_shared<Martini> ();
-	  // jloss->Add(martini);
-	  // auto langevin = make_shared<Langevin> (); 
-	  // jloss->Add(langevin); 
 	  jlossmanager->Add(jloss);  
 	  jetscape->Add(jlossmanager);
 
@@ -91,7 +86,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  auto writer= make_shared<JetScapeWriterAscii> (("test_200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_realhydro.dat").c_str());
+	  auto writer= make_shared<JetScapeWriterAscii> (("./200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.dat").c_str());
 	  jetscape->Add(writer); 
 
 	  time_t start, init; 
@@ -119,20 +114,20 @@ int main(int argc, char** argv)
 
   cout<<endl;
     
-  double scale_list[1] = {1.}; 
-  double alpha_list[1] = {0.3}; 
-  double omegacut_list[1] = {2.}; 
+  double scale_list[1] = {2.}; 
+  double alpha_list[2] = {0.005, 0.32}; 
+  double omegacut_list[1] = {1.}; 
   for (int i = 0; i < 1; i++)
   {
   	  
 	  double scale = scale_list[i]; 
-	  for (int j = 0; j < 1; j++)
+	  for (int j = 0; j < 2; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
 	  	for (int k = 0; k < 1; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-	  		RunEvents(scale, alpha_s, omegacut, 100000); 
+	  		RunEvents(scale, alpha_s, omegacut, 10000); 
 	  	}
 	  }
   }
