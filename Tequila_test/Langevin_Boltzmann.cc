@@ -114,20 +114,20 @@ int main(int argc, char** argv)
 
   cout<<endl;
     
-  double scale_list[1] = {2.}; 
-  double alpha_list[2] = {0.005, 0.32}; 
+  double muperp_scale_list[1] = {1.}; 
+  double alpha_list[1] = {0.3}; 
   double omegacut_list[1] = {1.}; 
   for (int i = 0; i < 1; i++)
   {
   	  
-	  double scale = scale_list[i]; 
-	  for (int j = 0; j < 2; j++)
+	  double muperp_scale = muperp_scale_list[i]; 
+	  for (int j = 0; j < 1; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
 	  	for (int k = 0; k < 1; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-	  		RunEvents(scale, alpha_s, omegacut, 10000); 
+	  		RunEvents(muperp_scale, alpha_s, omegacut, 1); 
 	  	}
 	  }
   }

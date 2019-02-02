@@ -29,16 +29,16 @@ class IntTabulator
 	const double CF = 4./3.; 
 	const int dF = 3; 
 
-	const static size_t Nw = 400; // number of sites in omega grid in tabulator
-	const static size_t Nq = 400; 
+	const static size_t Nw = 1000; // number of sites in omega grid in tabulator
+	const static size_t Nq = 1000; 
 	const double ErrAbs = 1.e-9; 
 	const double ErrRel = 1.e-3; 
 	const int NWorkSpace = 200; 
 	const int fKey = 2; 
-	const double kMax = 30.; 
-	const double omegaMin = -1.*kMax/2.; 
-	const double qperpMax = 2*sqrt(kMax*kMax+kMax*omegaMin); 
-	// double cls_muperp; 
+	const double wMax = 64.; 
+	const double omegaMin = -1.*wMax/2.; 
+	const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
+	const double muperp0 = 0.1; 
 	std::string ProcessStrings[nProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "ggg", "gqq", "qqg", "gqqg", "qggq", "gq_inel_conv", "qg_inel_conv", "none"}; 
   	
 
@@ -53,15 +53,8 @@ class IntTabulator
   	
   	std::string GetProcessString( int enumVal ); 
   	
-
-//	bool is_empty(std::ifstream& pFile); 
-//	bool is_exist (const std::string& name); 
-	
-  	void Gamma(double muperp, std::string path, process_type process); 
-//  	double Get_Gamma(double muperp, std::string path); 
-  	double dGamma_domega_forTab(double omega, double muperp, process_type process); 
+  	void Gamma(double muperp, std::string path, process_type process);  
   	double dGamma_domega_qperp_forTab(double omega, double qperp, process_type process); 
-  	friend double dGamma_domega(double omega, void *params); 
   	friend double dGamma_domega_qperp(double qperp, void *params); 
   	friend double dGamma_domega_qperp_k(double k, void *params); 
   	friend double dGamma_domega_qperp_k_phi_gg(double phi, void *params); 
@@ -73,11 +66,7 @@ class IntTabulator
 	friend double dGamma_domega_qperp_k_phi_qqbgg(double phi, void *params); 
 	friend double dGamma_domega_qperp_k_phi_qqbp(double phi, void *params); 
 
-	void Tabulator_dGamma_domega(double muperp, std::string path, process_type process); 
-//	double Interpolator_dGamma_domega(double omega); 
-//	double Extrapolator_dGamma_domega(double omega); 
-	void Tabulator_dGamma_domega_qperp(double muperp, std::string path, process_type process); 
-//	double Interpolator_dGamma_domega_qperp(double omega, double qperp, double muperp, std::string path); 
+	void Tabulator_dGamma_domega_qperp(std::string path, process_type process); 
 	
 }; 
 

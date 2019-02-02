@@ -37,62 +37,6 @@ std::string IntTabulator::GetProcessString(int enumVal)
 {
   	return ProcessStrings[enumVal];
 }
-	
-void IntTabulator::Gamma(double muperp, std::string path, process_type process)
-{
-	struct f_params p; 
-	// cls_muperp = muperp; 
-	p.f_muperp = muperp; 
-	p.f_process = process; 
-	gsl_function F; 
-	F.function = dGamma_domega; 
-	F.params = &p; 
-	double result, err; 
-	gsl_integration_qagi(&F, ErrAbs, ErrRel, NWorkSpace, Space_omega, &result, &err); 
-	std::ofstream table0d_out((path+"rate0d_table"+"_muperp"+std::to_string(muperp)+GetProcessString(process)+".dat").c_str()); 
-	table0d_out << result << "\n"; 
-	return; 
-}
-
-double IntTabulator::dGamma_domega_forTab(double omega, double muperp, process_type process)
-{
-	struct f_params p; 
-	p.f_omega = omega; 
-	p.f_process = process; 
-	gsl_function F; 
-	F.function = dGamma_domega_qperp; 
-	F.params = &p; 
-	double result, err; 
-	gsl_integration_qagiu(&F, muperp, ErrAbs, ErrRel, NWorkSpace, Space_qperp, &result, &err); 
-	return result; 
-}
-
-void IntTabulator::Tabulator_dGamma_domega(double muperp, std::string path, process_type process)
-{
-	std::ofstream table1d_out((path+"rate1d_table"+"_muperp"+std::to_string(muperp)+GetProcessString(process)+".dat").c_str()); 
-	double w; 
-	for (size_t i = 0; i <= Nw; i++)
-	{
-		w = (double)i*(kMax-omegaMin)/Nw+omegaMin; 
-		// Set the interpolation function to be log(dGamma_domega*(w^2+1)) to make the function linear-like
-		table1d_out << w << " " << log(dGamma_domega_forTab(w, muperp, process)*(w*w+1)) << "\n"; 
-	}
-}
-
-double dGamma_domega(double omega, void *params)
-{
-	struct f_params *p = (struct f_params *)params; 
-	IntTabulator cls; 
-	p->f_omega = omega; 
-	gsl_function F; 
-	F.function = dGamma_domega_qperp; 
-	F.params = p; 
-	double result, err; 
-	// double qperpMax = (2.*sqrt(cls.kMax*cls.kMax + cls.kMax*omega)); 
-	// if (p->f_muperp > cls.qperpMax) return 0.; 
-	gsl_integration_qagiu(&F, p->f_muperp, cls.ErrAbs, cls.ErrRel, cls.NWorkSpace, cls.Space_qperp, &result, &err); 
-	return result; 
-}
 
 double IntTabulator::dGamma_domega_qperp_forTab(double omega, double qperp, process_type process)
 {
@@ -110,39 +54,23 @@ double IntTabulator::dGamma_domega_qperp_forTab(double omega, double qperp, proc
 	return result; 
 }
 
-void IntTabulator::Tabulator_dGamma_domega_qperp(double muperp, std::string path, process_type process)
+void IntTabulator::Tabulator_dGamma_domega_qperp(std::string path, process_type process)
 {
-	// cls_muperp = muperp; 
-	std::ofstream table2d_out((path+"rate2d_table"+"_muperp"+std::to_string(muperp)+GetProcessString(process)+".dat").c_str()); 
+	std::ofstream table2d_out((path+"elastic_rate_table"+GetProcessString(process)+".dat").c_str()); 
 	double wp, w, q, qp; 
 	for (size_t i = 0; i <= Nw; i++)
 	{
-		wp = ((double)i)*(atan(kMax)-atan(omegaMin))/Nw+atan(omegaMin); 
+		wp = ((double)i)*(atan(wMax)-atan(omegaMin))/Nw+atan(omegaMin); 
 		w = tan(wp); 
+		// double qperpMax = 2.*sqrt(kMax*kMax + kMax*w); 
 		for (size_t j = 0; j <= Nq; j++)
 		{
-			qp = ((double)j)*(log(qperpMax)-log(muperp))/Nq+log(muperp); 
+			qp = ((double)j)*(log(qperpMax)-log(muperp0))/Nq+log(muperp0); 
 			q = exp(qp); 
-			table2d_out << log(dGamma_domega_qperp_forTab(w, q, process)) << " "; 
+			table2d_out << dGamma_domega_qperp_forTab(w, q, process) << " "; 
 		}
 		table2d_out << "\n"; 
 	}
-}
-
-double dGamma_domega_qperp(double qperp, void *params)
-{
-	struct f_params *p = (struct f_params *)params; 
-	IntTabulator cls; 
-	p->f_qperp = qperp; 
-	gsl_function F; 
-	F.function = dGamma_domega_qperp_k; 
-	F.params = p; 
-	double result, err, lowLimit; 
-	double omega = p->f_omega; 
-	double q = sqrt(qperp*qperp + omega*omega); 
-	lowLimit = (q - omega) / 2.; 
-	gsl_integration_qagiu(&F, lowLimit, cls.ErrAbs, cls.ErrRel, cls.NWorkSpace, cls.Space_k, &result, &err); 
-	return result; 
 }
 
 double dGamma_domega_qperp_k(double k, void *params)
@@ -287,41 +215,4 @@ double dGamma_domega_qperp_k_phi_qqb(double phi, void *params)
 	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
 	return C*M2; 
 }
-/*
-double dGamma_domega_qperp_k_phi_qqbgg(double phi, void *params)
-{
-	struct f_params *p = (struct f_params *)params; 
-	IntTabulator cls; 
-	double s, t, u, M2, C; 
-	double q, k, kp, qperp, omega; 
-	qperp = p->f_qperp; 
-	k = p->f_k; 
-	omega = p->f_omega;  
-	kp = k + omega; 
-	q = sqrt(qperp*qperp + omega*omega); 
-	t = -1.*pow(qperp, 2); 
-	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
-	u = -1.*s; 
-	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(2.*cls.CF*cls.CF*u/t)*(2.*nF(k)*(1-nF(k+omega))); 
-	return C*M2; 
-}
 
-double dGamma_domega_qperp_k_phi_qqbp(double phi, void *params)
-{
-	struct f_params *p = (struct f_params *)params; 
-	IntTabulator cls; 
-	double s, t, u, M2, C; 
-	double q, k, kp, qperp, omega; 
-	qperp = p->f_qperp; 
-	k = p->f_k; 
-	omega = p->f_omega;  
-	kp = k + omega; 
-	q = sqrt(qperp*qperp + omega*omega); 
-	t = -1.*pow(qperp, 2); 
-	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
-	u = -1.*s; 
-	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(2.*cls.CF*cls.CF*u/t)*(2.*nF(k)*(1-nF(k+omega))); 
-	return C*M2; 
-}*/

@@ -32,31 +32,33 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
   	double omega_over_T_cutoff;
 
   	const double nc = 3.; 
-  	const double kMax = 30.; 
-	const double omegaMin = -1.*kMax/2.; 
-	const double qperpMax = 2*sqrt(kMax*kMax+kMax*omegaMin); 
+  	const double wMax = 64.; 
+	const double omegaMin = -1.*wMax/2.; 
+	const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
+	const double muperp0 = 0.1; 
 	const int CA = 3; 
 	const int dA = 8; 
 	const double CF = 4./3.; 
 	const int dF = 3; 
 	const double ln2 = log(2); 
-	const static size_t Nw = 400; // number of sites in omega grid in tabulator
-	const static size_t Nq = 400; 
+	const static size_t Nw = 1000; // number of sites in omega grid in tabulator
+	const static size_t Nq = 1000; 
 	const double ErrAbs = 1.e-9; 
 	const double ErrRel = 1.e-3; 
 	const int NWorkSpace = 200; 
 	const int fKey = 2; 
 	const int Nsteps = 500; 
 	const static size_t nElasProcess = 6; 
+	int iqperp0 = 0; 
 	double max_omega_rate; 
 	double max_qperp_rate; 
 
 	struct tables
 	{
-		double rate = 1.; 
+		double rate = 0.; 
 		double x[Nw+1], y[Nw+1]; 
 		double xa[Nw+1], ya[Nq+1]; 
-		double zl[Nw+1][Nq+1];  
+		double rate_qperp[Nw+1][Nq+1];  
 	}; 
 	vector <tables> elasticTable; 
 	double *za = (double*) malloc(nElasProcess * (Nw+1) * (Nq+1) * sizeof(double)); 
