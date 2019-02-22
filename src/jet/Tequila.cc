@@ -43,7 +43,8 @@ Tequila::~Tequila()
 
 void Tequila::Finish()
 {
-	free(za); 
+	free(za);
+//	free(za_w);  
 	delete[] rate_ggg_p; 
 	delete[] rate_gqq_p;
 	delete[] rate_qqg_p;
@@ -238,7 +239,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 			qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
 			pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
 		}
-      	else if (process == gqqg || process == gq_inel_conv)
+      	else if (process == gqqg/* || process == gq_inel_conv*/)
       	{ 
       		double r = ZeroOneDistribution(*GetMt19937Generator());
 			if (r < 1./6.) Id = 1;
@@ -249,12 +250,12 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 			else Id = -3;
 			pVecNew = pVecRest; 
 		}
-		else if (process == qggq || process == qg_inel_conv)
+		else if (process == qggq/* || process == qg_inel_conv*/)
 		{
       		Id = 21; 
       		pVecNew = pVecRest;  
       	}
-      	else if (process == ggg)
+      	/*else if (process == ggg)
       	{ 
       		if (pRest/T < AMYpCut) return;
 
@@ -321,7 +322,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 
 			kVec.Set( (pxRest/pRest)*kRest, (pyRest/pRest)*kRest, (pzRest/pRest)*kRest, kRest );
 			newId = 21; 
-		}
+		}*/
 		else pVecNew = pVecRest; 
       	// pVecNew = pVecRest; 
       	pVecNewest = Langevin_Update(deltaTRest / hbarc, T, pVecNew, Id); 
@@ -359,9 +360,18 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 	double rateTotal; 
 	double rate[nProcess] = {0.}; 
 	// Elastic rate
+	Lambda = std::min({pRest, 2.*T*wMax}); 
 	for (int i = gg; i <= qqb; i++)
+	{
 		rate[i] = elasticTable[i].rate * T; 
-
+		rate[i] += casimir[i] * pow(g*g*T, 2) / (2.*wMax*T); 
+		// INFO << i << " remain " << casimir[i] * pow(g*g*T, 2) / (2.*wMax*T); 
+		rate[i] -= casimir[i] * pow(g*g*T, 2) / Lambda; 
+		rate[i] -= T/pRest * (elasticTable[i].rate_w*T - casimir[i]/2.*pow(g, 4)*T*log(wMax) + casimir[i]/2.*log(Lambda/(2.*T))); 
+		// INFO << i << " rate after Toverp " << elasticTable[i].rate * T - T/pRest * elasticTable[i].rate_w*T; 
+		// INFO << i << " remain Toverp " << T/pRest*casimir[i]/2.*pow(g, 4)*T*log(wMax); 
+		// INFO << i << " rate after Toverp " << elasticTable[i].rate * T - T/pRest * elasticTable[i].rate_w*T + casimir[i] * pow(g*g*T, 2) / (2.*wMax*T) + T/pRest*pow(g, 4)*T*casimir[i]/2.*log(wMax); 
+	}
 	// Conversion rate
 	for (int i = gqqg; i <= qg_inel_conv; i++)
 	{
@@ -494,8 +504,8 @@ double Tequila::qpara(double E, double T, int id)
 	double mD = sqrt(std::pow(g*T, 2)*(nc/3. + nf/6.)); 
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
 	double Minf = sqrt(pow(mD, 2)/2.); 
-	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.
-	 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
+	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.; 
+	// 		+ std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
 
@@ -554,9 +564,10 @@ double Tequila::TransverseMomentum_Transfer(double pRest, double omega, double T
 
 	int i_omega_index = (atan(omega)-atan(omegaMin))/(atan(wMax)-atan(omegaMin))*Nw; 
 	if (omega < 0) i_omega_index++; 
-	for (size_t j = 0; j < Nq; j++)
+	iqperp0 = (int)((log(muperp)-log(muperp0))/(log(qperpMax)-log(muperp0))*Nq); 
+	for (size_t j = iqperp0; j < Nq; j++)
 	{
-		double i_rate = elasticTable[process].rate_qperp[i_omega_index][j];
+		double i_rate = elasticTable[process].rate_qperp[i_omega_index][j] - T/pRest * elasticTable[process].rate_qperp[i_omega_index][j]*elasticTable[process].x[i_omega_index]; 
 		if (max_rate < i_rate) max_rate = i_rate; 
 	}
 	// INFO << BOLDGREEN << i_omega_index << " " << max_rate << " " << max_rate2 << " " << omega << " " << process; 
@@ -564,7 +575,8 @@ double Tequila::TransverseMomentum_Transfer(double pRest, double omega, double T
 	while (n_try < max_try)
 	{
 		qperp_test = muperp+ZeroOneDistribution(*GetMt19937Generator())*(limitMax-muperp);
-		rate_qperp_test = Interpolator_dGamma_domega_qperp(omega, qperp_test, process); 
+		rate_qperp_test = Interpolator_dGamma_domega_qperp(omega, qperp_test, process) - T/pRest * Interpolator_dGamma_domega_qperp_w(omega, qperp_test, process); 
+		// INFO << BOLDWHITE << Interpolator_dGamma_domega_qperp(omega, qperp_test, process) << " " << T/pRest * Interpolator_dGamma_domega_qperp_w(omega, qperp_test, process) << Interpolator_dGamma_domega_qperp(omega, qperp_test, process) - T/pRest * Interpolator_dGamma_domega_qperp_w(omega, qperp_test, process);
 		r = max_rate * ZeroOneDistribution(*GetMt19937Generator());
 		if (rate_qperp_test > max_rate) WARN << "The sampled rate is larger than the maximum rate we assumed in elastic 2d part!! " << rate_qperp_test << " " << max_rate; 
 		if (r < rate_qperp_test)
@@ -588,9 +600,10 @@ double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 	const int max_try = 10000; 
 	int n_try = 0; 
 	double omega = 0., omega_test=0., rate_omega_test, max_rate = 0., max_omega, r; 
+
 	for (size_t i = 0; i < Nw; i++)
 	{
-		double i_rate = exp(elasticTable[process].y[i])/(elasticTable[process].x[i]*elasticTable[process].x[i]+1.); 
+		double i_rate = exp(elasticTable[process].y[i])/(elasticTable[process].x[i]*elasticTable[process].x[i]+1.) - T/pRest * elasticTable[process].yw[i]; 
 		// if (max_rate < i_rate && (elasticTable[process].x[i] > muperp || elasticTable[process].x[i] < -muperp)) max_rate = i_rate; 
 		if (max_rate < i_rate) max_rate = i_rate; 
 	}
@@ -598,10 +611,11 @@ double Tequila::Energy_Transfer(double pRest, double T, process_type process)
 	while (n_try < max_try)
 	{
 		// while (omega_test < muperp && omega_test > -muperp)
-		omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(wMax-omegaMin);
+		omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(Lambda/(2.*T)-omegaMin);
 		// omega_test = omegaMin+ZeroOneDistribution(*GetMt19937Generator())*(kMax-2*muperp-omegaMin);
 		// if (omega_test > -muperp) omega_test += 2*muperp; 
-		rate_omega_test = Interpolator_dGamma_domega(omega_test, process); 
+		rate_omega_test = Interpolator_dGamma_domega(omega_test, process) - T/pRest * Interpolator_dGamma_domega_w(omega_test, process); 
+		// INFO << BOLDWHITE << Interpolator_dGamma_domega(omega_test, process) << " " << T/pRest * Interpolator_dGamma_domega_w(omega_test, process) << " " << rate_omega_test; 
 		// INFO << n_try << " sampled omega " << omega_test << " " << rate_omega_test<< " " << max_rate; 
 		if (rate_omega_test > max_rate) WARN << "The sampled rate is larger than the maximum rate we assumed in elastic 1d part!!"; 
 		r = max_rate * ZeroOneDistribution(*GetMt19937Generator());
@@ -656,8 +670,9 @@ double Tequila::rate_conv(process_type process, double T, double pRest)
 
 void Tequila::LoadElasticTables()
 {
-	IntTabulator inttabulator; 
+	IntTabulator inttabulator;
 	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1); 
+	gsl_interp2d *interp_w = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1); 
 	// Iterate over all the elastic processes
 	// INFO << BOLDMAGENTA << "muperp is " << muperp; 
 	for (int iProcess = gg; iProcess <= qqb; iProcess++)
@@ -679,8 +694,9 @@ void Tequila::LoadElasticTables()
     			iTables.ya[iqperp] = exp(((double)iqperp)*(log(qperpMax)-log(muperp0))/Nq+log(muperp0)); 
 				// INFO << iTables.ya[iqperp]; 			
 				table2d_in >> z; 
-				iTables.rate_qperp[iomega][iqperp] = z; 
+				iTables.rate_qperp[iomega][iqperp] = z;
 				gsl_interp2d_set(interp, &za[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, log(z)); 
+				gsl_interp2d_set(interp_w, &za_w[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, log(z*iTables.xa[iomega])); 
     		}
     	}
 		table2d_in.close(); 
@@ -697,20 +713,25 @@ void Tequila::LoadElasticTables()
 				double dy = exp(((double)(iqperp+1))*(log(qperpMax)-log(muperp0))/Nq+log(muperp0)) - exp(((double)iqperp)*(log(qperpMax)-log(muperp0))/Nq+log(muperp0)); 
 				iTables.y[iomega] += dy * (iTables.rate_qperp[iomega][iqperp] + iTables.rate_qperp[iomega][iqperp+1]) / 2; 
 			}
+			iTables.yw[iomega] = iTables.y[iomega] * iTables.x[iomega]; 
 		}
 
 		for (size_t iomega = 0; iomega < Nw; iomega++)
     	{
     		double dx = iTables.x[iomega+1] - iTables.x[iomega]; 
 			iTables.rate += (iTables.y[iomega+1] + iTables.y[iomega]) * dx / 2; 
+			iTables.rate_w += (iTables.yw[iomega+1] + iTables.yw[iomega]) * dx / 2; 
 			iTables.y[iomega] = log(iTables.y[iomega]*(iTables.x[iomega]*iTables.x[iomega]+1)); 
 		}
+		iTables.y[Nw] = log(iTables.y[Nw]*(iTables.x[Nw]*iTables.x[Nw]+1)); 
 		INFO << BOLDWHITE << iTables.rate; 
 		iTables.rate *= pow(g, 4); 
+		iTables.rate_w *= pow(g, 4); 
 		INFO << BOLDGREEN << "muperp is " << muperp << " rate is " << iTables.rate; 
 		elasticTable.push_back(iTables); 
 	}
 	gsl_interp2d_free(interp); 
+	gsl_interp2d_free(interp_w); 
 }
 
 double Tequila::Interpolator_dGamma_domega(double omega, process_type process)
@@ -726,18 +747,43 @@ double Tequila::Interpolator_dGamma_domega(double omega, process_type process)
 	return exp(result)/(omega*omega+1.); 
 }
 
+double Tequila::Interpolator_dGamma_domega_w(double omega, process_type process)
+{
+	gsl_interp_accel *acc = gsl_interp_accel_alloc ();
+    gsl_interp *interp = gsl_interp_alloc (gsl_interp_linear, Nw+1);
+
+	gsl_interp_init (interp, elasticTable[process].x, elasticTable[process].yw, Nw+1); 
+	double result; 
+	result = gsl_interp_eval (interp, elasticTable[process].x, elasticTable[process].yw, omega, acc);  
+	gsl_interp_free (interp); 
+	gsl_interp_accel_free (acc); 
+	return result; 
+}
+
 double Tequila::Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process)
 {	
 	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
   	gsl_interp_accel *xacc = gsl_interp_accel_alloc();
   	gsl_interp_accel *yacc = gsl_interp_accel_alloc();
 
-  	// gsl_interp2d_init(interp, elasticTable[process].xa, elasticTable[process].ya, elasticTable[process].za, Nw+1, Nq+1);
 	gsl_interp2d_init(interp, elasticTable[process].xa, elasticTable[process].ya, &za[process*(Nw+1)*(Nq+1)], Nw+1, Nq+1);
-	// if (omega == elasticTable[iProcess].xa[iqperp] && qperp == elasticTable[iProcess].ya[iqperp]) return z; 
     double result; 
-    // result = gsl_interp2d_eval(interp, elasticTable[process].xa, elasticTable[process].ya, elasticTable[process].za, omega, qperp, xacc, yacc); 
 	result = gsl_interp2d_eval(interp, elasticTable[process].xa, elasticTable[process].ya, &za[process*(Nw+1)*(Nq+1)], omega, qperp, xacc, yacc); 
+    gsl_interp2d_free(interp);
+  	gsl_interp_accel_free(xacc);
+  	gsl_interp_accel_free(yacc);
+    return exp(result); 
+}
+
+double Tequila::Interpolator_dGamma_domega_qperp_w(double omega, double qperp, process_type process)
+{	
+	gsl_interp2d *interp = gsl_interp2d_alloc(gsl_interp2d_bilinear, Nw+1, Nq+1);
+  	gsl_interp_accel *xacc = gsl_interp_accel_alloc();
+  	gsl_interp_accel *yacc = gsl_interp_accel_alloc();
+
+	gsl_interp2d_init(interp, elasticTable[process].xa, elasticTable[process].ya, &za_w[process*(Nw+1)*(Nq+1)], Nw+1, Nq+1);
+    double result; 
+	result = gsl_interp2d_eval(interp, elasticTable[process].xa, elasticTable[process].ya, &za_w[process*(Nw+1)*(Nq+1)], omega, qperp, xacc, yacc); 
     gsl_interp2d_free(interp);
   	gsl_interp_accel_free(xacc);
   	gsl_interp_accel_free(yacc);
@@ -763,23 +809,6 @@ void Tequila::allocate_memory_for_radiative_rate_table() {
 			 differential_rate_qqg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
 		}
 	}	
-	/*rate_ggg_p = new double [nb_points_in_p];
-	rate_gqq_p = new double [nb_points_in_p];
-	rate_qqg_p = new double [nb_points_in_p];
-	//maximum_differential_rate = new double [nb_points_in_p];
-	differential_rate_ggg_p_omega_qperp = new double ** [nb_points_in_p];
-	differential_rate_gqq_p_omega_qperp = new double ** [nb_points_in_p];
-	differential_rate_qqg_p_omega_qperp = new double ** [nb_points_in_p];
-	for(int ip=0;ip<nb_points_in_p; ip++) {
-		differential_rate_ggg_p_omega_qperp[ip]=new double * [nb_points_in_omega];
-		differential_rate_gqq_p_omega_qperp[ip]=new double * [nb_points_in_omega];
-		differential_rate_qqg_p_omega_qperp[ip]=new double * [nb_points_in_omega];
-		for(int iomega=0;iomega<nb_points_in_omega; iomega++) {
-			 differential_rate_ggg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
-			 differential_rate_gqq_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
-			 differential_rate_qqg_p_omega_qperp[ip][iomega]=new double [nb_points_in_qperp];
-		}
-	}*/
 
 }
 
@@ -794,11 +823,6 @@ void Tequila::load_differential_rate(const double alpha_s, const double alpha_EM
 	//Open file
 	std::ifstream rate_file;
 	rate_file.open(filename.str().c_str(),std::fstream::in);
-
-/*	if (!rate_file.is_open()) {
-		std::cout << "Can't open rate table file, aborting...\n";
-		exit(1);
-	}*/
 
 	//Struct [from Moore's code] to store rates
 	dGammas Moore_rate_arrays;
@@ -862,7 +886,6 @@ void Tequila::load_differential_rate(const double alpha_s, const double alpha_EM
 				const double rate_ggg=tmp_rate_ggg*envelope;
 				const double rate_gqq=tmp_rate_gqq*envelope;
 				const double rate_qqg=tmp_rate_qqg*envelope;
-				//if (ip ==0 && iomega == 0) std::cout << "qperp_over_T=" << qperp_over_T << " & rate=" << rate << "\n";
 				//assign rate
 				differential_rate_ggg_p_omega_qperp[ip][iomega][iq]=rate_ggg;
 				differential_rate_gqq_p_omega_qperp[ip][iomega][iq]=rate_gqq;
@@ -1013,28 +1036,18 @@ void Tequila::evaluate_integrated_rate(double omega_over_T_cut, double *** diffe
 				curr_qperp=next_qperp;
 			}
 
-			//std::cout << "ip=" << ip << ", iomega=" << iomega << ", rate=" << integral_qperp << "\n";
-
 			omega_rate_array[iomega]=integral_qperp;
 
 		}
-		// WARN << "after the loop. "; 
 		// initialise GSL interpolator
 		gsl_interp * interp = gsl_interp_alloc( gsl_interp_akima, pOver2T_cut_pos_position_int);
-	//	gsl_interp * interp = gsl_interp_alloc( gsl_interp_linear, pOver2T_cut_pos_position_int);
-	//	gsl_interp * interp = gsl_interp_alloc(gsl_interp_cspline, pOver2T_cut_pos_position_int);
 		gsl_interp_accel *acc = gsl_interp_accel_alloc ();
 		gsl_interp_init(interp,  omega_position_array, omega_rate_array, pOver2T_cut_pos_position_int); 
 
 		// integral in omega from -infinity to -omega_over_T_cut
-		// WARN << "before interpo 1"; 
-		// if (omega_over_T_min(p_over_T) < -1.*omega_over_T_cut) 
-		// WARN << "minimum " << std::min(omega_over_T_min(p_over_T), -1.*omega_over_T_cut); 
 			integral_omega+=gsl_interp_eval_integ(interp, omega_position_array, omega_rate_array, omega_over_T_min(p_over_T), std::max(omega_over_T_min(p_over_T), -1.*omega_over_T_cut), acc);
-		// WARN << "p_over_T "<<p_over_T; 
 		// integral in omega from omega_over_T_cut to p_over_T/2
 		integral_omega+=gsl_interp_eval_integ(interp, omega_position_array, omega_rate_array , std::min(omega_over_T_cut, p_over_T/2.), p_over_T/2., acc);
-		// WARN << "after interpo 2"; 
 		// free memory
 		gsl_interp_free(interp);
 		gsl_interp_accel_free(acc);
@@ -1129,17 +1142,6 @@ double Tequila::differential_rate(const double p_over_T, const double omega_over
 //double ERateColl::rate(const struct ERateParam &rate_params, const Pythia8::Vec4 &p0, const int &id0)
 double Tequila::rate_inel(double energy, double temp, double * rate_p)
 {
-
-//	const double temp=rate_params.T();
-//
-//	if (id0!=fId0) { 
-//		// the incoming particle is not a gluon and this rate doesn't apply
-//		return 0. ;
-//	} 
-//	if (temp/p0.e() >  ERateParam::MaxTOverP ) {
-//		return 0. ;  // Don't evolve if the energy is too small
-//	}
-
 	//energy/temperature ratio of the incoming jet
 	//const double energy_over_T=p0.e()/temp;
 	const double energy_over_T=energy/temp;
@@ -1165,13 +1167,10 @@ double Tequila::rate_inel(double energy, double temp, double * rate_p)
 
 //Given a value of parton momentum p, sample the rate in omega and qperp
 void Tequila::sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q) {
-	//   double lam = pp.lambda(p0) ;
 	int ntry = 0  ;
 	const int ntry_max = 10000;   
 	
 	//helper variables
-	//const double qperp_over_T_val_min=0.0;
-	//const double qperp_over_T_val_max=qperp_over_T_max();
 	const double p_over_T=p/T;
 	const double omega_over_T_neg_min=omega_over_T_min(p_over_T);
 	const double omega_over_T_neg_max=-omega_over_T_cutoff;
@@ -1183,20 +1182,8 @@ void Tequila::sample_dgamma_dwdq(double p, double T, double *** differential_rat
 	const double max_rate=maximum_rate_p(p_over_T, differential_rate_p_omega_qperp);
 
 	while (ntry < ntry_max) {
-		//      fRateTable.sample_in_x1range(-GSL_DBL_MAX,lam/(2.*T), rng, params, w, q) ;
-		//double r = max_rate*rng(params) ;
 		double r = max_rate*ZeroOneDistribution(*GetMt19937Generator()) ;
-		//      double v = (1. -  T*w/p0.e())/rratio(w) ;
-		//const double qx_over_T_tmp=qperp_over_T_val_max*rng(params);
-		//const double qy_over_T_tmp=qperp_over_T_val_max*rng(params);
-		//const double q_over_T_test=sqrt(qx_over_T_tmp*qx_over_T_tmp+qy_over_T_tmp*qy_over_T_tmp);
 
-		// sample omega_over_T
-		// a bit more complicated due to the omega_over_T_cutoff around 0
-		// With[{tmp = (rnd*(xnegspan + xposspan))},
-		// If[tmp > xnegspan, xposmin + (tmp - xnegspan), xnegmin + tmp]
-		//  ]
-		//const double rnd2=rng(params);
 		const double rnd2=ZeroOneDistribution(*GetMt19937Generator());
 		const double tmp=rnd2*(omega_over_T_neg_span+omega_over_T_pos_span);
 		double omega_over_T_test;
@@ -1205,8 +1192,7 @@ void Tequila::sample_dgamma_dwdq(double p, double T, double *** differential_rat
 
 		// sample q_over_T, remembering it is a radial variable
 		// also, q_over_T must be smaller than abs(omega_over_T_test)
-		//const double q_over_T_sqr=omega_over_T_test*omega_over_T_test*rng(params);
-		//const double q_over_T_test=sqrt(q_over_T_sqr);
+
 		const double q_over_T_test=0.0;  //let's use qperp/T=0 for now
 
 		double v = differential_rate(p_over_T, omega_over_T_test, q_over_T_test, differential_rate_p_omega_qperp);
@@ -1216,7 +1202,6 @@ void Tequila::sample_dgamma_dwdq(double p, double T, double *** differential_rat
 			std::cout << "Function \"maximum_rate_p()\" apparently does not return the maximum of the rate... This is bad. Fix it.\n";
 			std::cout << "current guess for maximum=" << max_rate << " & sampled rate at omega/T="<< omega_over_T_test << "&q_perp/T=" << q_over_T_test << " is " << v << "\n";
 			exit(1);
-			//assert(false);
 		}
 
 		if (r < v) {

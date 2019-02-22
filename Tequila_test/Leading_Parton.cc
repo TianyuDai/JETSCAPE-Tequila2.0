@@ -26,9 +26,9 @@ using namespace Jetscape;
 
 int main(int argc, char** argv)
 {
-  double scale_list[1] = {1.}; 
-  double alpha_list[2] = {0.005, 0.32}; 
-  double omegacut_list[1] = {2.}; 
+  double scale_list[3] = {0.5, 1., 2.}; 
+  double alpha_list[1] = {0.3}; 
+  double omegacut_list[1] = {1.}; 
 
   double jetpTMin = 20., jetRadius = 0.4, partonpTMin = 20.; 
 
@@ -36,18 +36,18 @@ int main(int argc, char** argv)
   vector <fjcore::PseudoJet> fjInputs; 
   fjcore::Selector select_pt = fjcore::SelectorPtMin(partonpTMin);
 
-  for (int ii = 0; ii < 1; ii++)
+  for (int ii = 0; ii < 3; ii++)
   {
   	  
 	  double scale = scale_list[ii]; 
-	  for (int jj = 0; jj < 2; jj++)
+	  for (int jj = 0; jj < 1; jj++)
 	  {
 	  	double alpha_s = alpha_list[jj]; 
 		for (int kk = 0; kk < 1; kk++)
 		{
 		  double omegacut = omegacut_list[kk]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.dat"); 
-		  std::ofstream jet_output (("../../Result/Tequila/elas/small_coupling_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.txt").c_str()); 
+		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2.dat"); 
+		  std::ofstream jet_output (("../../../../Result/Tequila2.0/elas/Lambda_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2.txt").c_str()); 
 
 		  while (!reader->Finished())
 			{ 

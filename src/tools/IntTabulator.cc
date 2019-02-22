@@ -117,7 +117,7 @@ double dGamma_domega_qperp_k_phi_gg(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.CA*cls.CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
+	M2 = (double)(CA*CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
 	return C*M2; 
 }
 
@@ -136,7 +136,7 @@ double dGamma_domega_qperp_k_phi_gq(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.dF*cls.CF*cls.CA/cls.dA*6)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	M2 = (double)(dF*CF*CA/dA*6)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
 	return C*M2; 
 }
 
@@ -155,7 +155,7 @@ double dGamma_domega_qperp_k_phi_qg(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.CF*cls.CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
+	M2 = (double)(CF*CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
 	return C*M2; 
 }
 
@@ -174,7 +174,7 @@ double dGamma_domega_qperp_k_phi_qqp(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA*4)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	M2 = (double)(dF*CF*CF/dA*4)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
 	return C*M2; 
 }
 
@@ -193,7 +193,7 @@ double dGamma_domega_qperp_k_phi_qq(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	M2 = (double)(dF*CF*CF/dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
 	return C*M2; 
 }
 
@@ -212,7 +212,7 @@ double dGamma_domega_qperp_k_phi_qqb(double phi, void *params)
 	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(cls.dF*cls.CF*cls.CF/cls.dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
+	M2 = (double)(dF*CF*CF/dA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nF(k)*(1-nF(k+omega))); 
 	return C*M2; 
 }
 

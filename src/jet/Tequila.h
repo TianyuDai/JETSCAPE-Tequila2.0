@@ -30,39 +30,29 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
   	double alpha_EM;
   	double hydro_Tc;
   	double omega_over_T_cutoff;
+	double Lambda; 
 
   	const double nc = 3.; 
-  	const double wMax = 64.; 
-	const double omegaMin = -1.*wMax/2.; 
-	const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
-	const double muperp0 = 0.1; 
-	const int CA = 3; 
-	const int dA = 8; 
-	const double CF = 4./3.; 
-	const int dF = 3; 
 	const double ln2 = log(2); 
-	const static size_t Nw = 1000; // number of sites in omega grid in tabulator
-	const static size_t Nq = 1000; 
-	const double ErrAbs = 1.e-9; 
-	const double ErrRel = 1.e-3; 
-	const int NWorkSpace = 200; 
-	const int fKey = 2; 
+
 	const int Nsteps = 500; 
 	const static size_t nElasProcess = 6; 
 	int iqperp0 = 0; 
 	double max_omega_rate; 
 	double max_qperp_rate; 
+	double casimir[nElasProcess] = {CA*CA/(24.*M_PI), dF*CF*CA/dA/(8.*M_PI), CF*CA/(24.*M_PI), dF*CF*CF/dA/(72.*M_PI), dF*CF*CF/dA/(18.*M_PI), dF*CF*CF/dA/(72.*M_PI)};		// The coefficient for total rate integration of large omega
 
 	struct tables
 	{
 		double rate = 0.; 
-		double x[Nw+1], y[Nw+1]; 
+		double rate_w = 0.; 	// rate_w is T/p correction of the total rate
+		double x[Nw+1], y[Nw+1], yw[Nw+1]; 	// value in y is scaled by log(y*x^2+1), while value in yw is not scaled
 		double xa[Nw+1], ya[Nq+1]; 
 		double rate_qperp[Nw+1][Nq+1];  
 	}; 
 	vector <tables> elasticTable; 
 	double *za = (double*) malloc(nElasProcess * (Nw+1) * (Nq+1) * sizeof(double)); 
-	// double *za = new double(nElasProcess * (Nw+1) * (Nq+1)); 
+	double *za_w = (double*) malloc(nElasProcess * (Nw+1) * (Nq+1) * sizeof(double)); 
 
 	bool is_empty(std::ifstream& pFile); 
 	bool is_exist (const std::string& name); 
@@ -137,18 +127,14 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 
 	Tequila();
 	virtual ~Tequila();
-/*	static double energy_loss_time_elas; 
-	static double energy_loss_time_inel; 
-	static double tequila_time; 
-	static double omega_sample_time; 
-	static double qperp_sample_time; 
-	static double inel_sample_time; */
 
 	double rate_conv(process_type process, double T, double pRest); 
   	void LoadElasticTables(); 
 	double Interpolator_dGamma_domega(double omega, process_type process); 
+	double Interpolator_dGamma_domega_w(double omega, process_type process); 
 	double Extrapolator_dGamma_domega(double omega, process_type process); 
 	double Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process); 
+	double Interpolator_dGamma_domega_qperp_w(double omega, double qperp, process_type process); 
 	
   	void Init();
 	void Finish(); 

@@ -50,6 +50,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  omegaxml->SetText(omegacut); 
 
   	  double t = 0.3*0.3/alpha_s/alpha_s; 
+	  // double t = 0.01; 
   	  tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
   	  lenthxml->SetText(t);
 	  // JetScapeXML::Instance()->CloseXMLFile();
@@ -86,7 +87,8 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  auto writer= make_shared<JetScapeWriterAscii> (("./200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.dat").c_str());
+	  auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2.dat").c_str());
+	  // auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
 	  jetscape->Add(writer); 
 
 	  time_t start, init; 
@@ -119,7 +121,6 @@ int main(int argc, char** argv)
   double omegacut_list[1] = {1.}; 
   for (int i = 0; i < 1; i++)
   {
-  	  
 	  double muperp_scale = muperp_scale_list[i]; 
 	  for (int j = 0; j < 1; j++)
 	  {
