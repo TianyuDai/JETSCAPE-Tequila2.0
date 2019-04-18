@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 		for (int kk = 0; kk < 1; kk++)
 		{
 		  double omegacut = omegacut_list[kk]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2.dat"); 
-		  std::ofstream jet_output (("../../../../Result/Tequila2.0/elas/Lambda_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2.txt").c_str()); 
+		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2_2fm.dat"); 
+		  std::ofstream jet_output (("../../../../Result/Tequila/total/MARTINI_compare/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2_2fm.txt").c_str()); 
 
 		  while (!reader->Finished())
 			{ 

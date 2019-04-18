@@ -391,9 +391,9 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 	if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
 	{
 		double totalQuarkProb = 0.; 
-		if (pRest/T > AMYpCut)
-			totalQuarkProb += rate[qqg]*dt;
-		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb] + rate[qggq] + rate[qg_inel_conv]) * dt; 
+		/*if (pRest/T > AMYpCut)
+			totalQuarkProb += (rate[qqg] +  + rate[qg_inel_conv])*dt;*/
+		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb] + rate[qggq]) * dt; 
 		// warn if total probability exceeds 0.1
 		if (totalQuarkProb > 0.2)
       		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 	
@@ -419,14 +419,14 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			accumProb += Prob; 
   			Prob = rate[qggq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
-
+/*
 			accumProb += Prob; 
   			Prob = rate[qg_inel_conv] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg_inel_conv; 
   			
   			accumProb += Prob; 
   			Prob = rate[qqg] * dt; 
-  			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; 
+  			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; */
   		}
   		else
   			return none; 
@@ -434,9 +434,9 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   	else if (Id == 21)
   	{
   		double totalGluonProb = 0.; 
-  		if (pRest/T > AMYpCut) 
-			totalGluonProb += (rate[gqq] + rate[ggg])*dt;
-  		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg] + rate[gq_inel_conv]) * dt; 
+  		/*if (pRest/T > AMYpCut) 
+			totalGluonProb += (rate[gqq] + rate[ggg] + rate[gq_inel_conv])*dt;*/
+  		totalGluonProb += (rate[gg] + rate[gq] + rate[gqqg]) * dt; 
 		if (totalGluonProb > 0.2)
   			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
   		
@@ -457,7 +457,7 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			accumProb += Prob; 
   			Prob = rate[gqqg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
-
+/*
 			accumProb += Prob; 
   			Prob = rate[gq_inel_conv] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq_inel_conv; 
@@ -468,7 +468,7 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 
 			accumProb += Prob; 
   			Prob = rate[gqq] * dt; 
-  			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return gqq; 
+  			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return gqq; */
 		}
   		else return none; 
   	}
@@ -696,7 +696,8 @@ void Tequila::LoadElasticTables()
 				table2d_in >> z; 
 				iTables.rate_qperp[iomega][iqperp] = z;
 				gsl_interp2d_set(interp, &za[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, log(z)); 
-				gsl_interp2d_set(interp_w, &za_w[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, log(z*iTables.xa[iomega])); 
+				gsl_interp2d_set(interp_w, &za_w[iProcess*(Nw+1)*(Nq+1)], iomega, iqperp, z*iTables.xa[iomega]); 	// omega coule be negative, but the number in log could not be negative 
+				// WARN << log(z) << " " << iTables.xa[iomega] << "\n"; 
     		}
     	}
 		table2d_in.close(); 
@@ -787,7 +788,7 @@ double Tequila::Interpolator_dGamma_domega_qperp_w(double omega, double qperp, p
     gsl_interp2d_free(interp);
   	gsl_interp_accel_free(xacc);
   	gsl_interp_accel_free(yacc);
-    return exp(result); 
+    return result; 
 }
 
 void Tequila::allocate_memory_for_radiative_rate_table() {
