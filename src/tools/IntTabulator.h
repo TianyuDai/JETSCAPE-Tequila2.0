@@ -6,8 +6,21 @@
 
 // qqb is qqbar->qqbar, qqp is qq'->qq', qqbp is qqbar->q'qbar', qqbgg is qqbar->gg
 // gq_inel_conv and qg_inel_conv are conversion processes of inelasic part. 
-enum process_type {gg, gq, qg, qq, qqp, qqb, ggg, gqq, qqg, gqqg, qggq, gq_inel_conv, qg_inel_conv, none}; 
-const static size_t nProcess = 14; 
+
+const int CA = 3; 
+const int dA = 8; 
+const double CF = 4./3.; 
+const int dF = 3; 
+
+const static size_t Nw = 1000; // number of sites in omega grid in tabulator
+const static size_t Nq = 1000; 
+
+const double wMax = 64.; 
+const double omegaMin = -1.*wMax/2.; 
+const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
+const double muperp0 = 0.1; 
+
+enum process_type {gg, gq, qg, qq, qqp, qqb, ggg, gqq, qqg, gqqg, qggq, gq_inel_conv, qg_inel_conv, gg_split, gq_split, qg_split, qq_split, qqp_split, qqb_split, none}; 
 	
 struct f_params
 {
@@ -24,29 +37,19 @@ struct f_params
 class IntTabulator
 {
  private: 
-	const int CA = 3; 
-	const int dA = 8; 
-	const double CF = 4./3.; 
-	const int dF = 3; 
 
-	const static size_t Nw = 1000; // number of sites in omega grid in tabulator
-	const static size_t Nq = 1000; 
 	const double ErrAbs = 1.e-9; 
 	const double ErrRel = 1.e-3; 
 	const int NWorkSpace = 200; 
 	const int fKey = 2; 
-	const double wMax = 64.; 
-	const double omegaMin = -1.*wMax/2.; 
-	const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
-	const double muperp0 = 0.1; 
+	const static size_t nProcess = 14; 
 	std::string ProcessStrings[nProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "ggg", "gqq", "qqg", "gqqg", "qggq", "gq_inel_conv", "qg_inel_conv", "none"}; 
-  	
 
  public: 
   	gsl_integration_workspace *Space_omega ;
-      	gsl_integration_workspace *Space_qperp;
-      	gsl_integration_workspace *Space_k;
-      	gsl_integration_workspace *Space_phi ;
+    gsl_integration_workspace *Space_qperp;
+    gsl_integration_workspace *Space_k;
+    gsl_integration_workspace *Space_phi ;
 
   	IntTabulator();
   	virtual ~IntTabulator();

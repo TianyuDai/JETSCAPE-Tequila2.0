@@ -30,29 +30,25 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
   	double alpha_EM;
   	double hydro_Tc;
   	double omega_over_T_cutoff;
+	double Lambda; 
 
   	const double nc = 3.; 
-  	const double wMax = 64.; 
-	const double omegaMin = -1.*wMax/2.; 
-	const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
-	const double muperp0 = 0.1; 
-	const int CA = 3; 
-	const int dA = 8; 
-	const double CF = 4./3.; 
-	const int dF = 3; 
 	const double ln2 = log(2); 
-	const static size_t Nw = 1000; // number of sites in omega grid in tabulator
-	const static size_t Nq = 1000; 
-	const double ErrAbs = 1.e-9; 
-	const double ErrRel = 1.e-3; 
-	const int NWorkSpace = 200; 
-	const int fKey = 2; 
+
 	const int Nsteps = 500; 
 	const static size_t nElasProcess = 6; 
+	const static size_t nTotalProcess = 20; 
+	
 	int iqperp0 = 0; 
 	double max_omega_rate; 
 	double max_qperp_rate; 
+	double casimir[nElasProcess] = {CA*CA/(24.*M_PI), dF*CF*CA/dA/(8.*M_PI), CF*CA/(24.*M_PI), dF*CF*CF/dA/(72.*M_PI), dF*CF*CF/dA/(18.*M_PI), dF*CF*CF/dA/(72.*M_PI)};		// The coefficient for total rate integration of large omega
 
+	// gg, gq, qg, qq, qqp, qqb
+	// const static size_t nSplittingProcess = 9; 
+	double splitting_c_lambda[nElasProcess] = {8.*CA*CA, 16.*CA, 4.*CF*CA, 16.*CF, 16.*CF, 16.*CF}; 
+	double splitting_c_p[nElasProcess] = {5./3*CA*CA, 2.*CF-4.*CA, CF*CF/2-CF*CA, -4.*CF, -4.*CF, 4.*CF*(6.*CF-3.*CA-1./3)}; 
+	double splitting_c_ln[nElasProcess] = {-4.*CA*CA, 4.*CF-8.*CA, CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF, -8.*CF*(2.*CF-CA+1.)}; 
 	struct tables
 	{
 		double rate = 0.; 
@@ -137,19 +133,16 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 
 	Tequila();
 	virtual ~Tequila();
-/*	static double energy_loss_time_elas; 
-	static double energy_loss_time_inel; 
-	static double tequila_time; 
-	static double omega_sample_time; 
-	static double qperp_sample_time; 
-	static double inel_sample_time; */
 
 	double rate_conv(process_type process, double T, double pRest); 
   	void LoadElasticTables(); 
 	double Interpolator_dGamma_domega(double omega, process_type process); 
 	double Extrapolator_dGamma_domega(double omega, process_type process); 
 	double Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process); 
-	
+	double splittingF(double pRest, double x, double T, process_type process); 
+	double splittingRateOmega(double pRest, double x, double T, process_type process); 
+	// double splittingRateQperp(double pRest, double qperp, double omega, double T, process_type process); 
+
   	void Init();
 	void Finish(); 
   	void DoEnergyLoss(double deltaT, double time, double Q2, vector<Parton>& pIn, vector<Parton>& pOut);
@@ -157,6 +150,10 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
   	FourVector Momentum_Update(double omega, double qperp, double T, FourVector pVec); 
   	double TransverseMomentum_Transfer(double pRest, double omega, double T, process_type process); 
   	double Energy_Transfer(double pRest, double T, process_type process); 
+	double TransverseMomentum_Transfer_Split(double pRest, double omega, double T, process_type process); 
+  	double Energy_Transfer_Split(double pRest, double T, process_type process); 
+	double xSampling(double pRest, double kRest, double T, process_type process); 
+	double thermalDistributionSampling(process_type process); 
   	
   	double qpara(double E, double T, int id); 
   	double qperp(double E, double T, int id); 

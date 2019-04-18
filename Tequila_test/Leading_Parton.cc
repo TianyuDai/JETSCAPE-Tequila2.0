@@ -26,9 +26,9 @@ using namespace Jetscape;
 
 int main(int argc, char** argv)
 {
-  double scale_list[1] = {1.}; 
-  double alpha_list[2] = {0.005, 0.32}; 
-  double omegacut_list[1] = {2.}; 
+  double scale_list[8] = {0.5, 1., 2., 5., 10., 15., 20., 30.}; 
+  double alpha_list[1] = {0.3}; 
+  double omegacut_list[1] = {1.}; 
 
   double jetpTMin = 20., jetRadius = 0.4, partonpTMin = 20.; 
 
@@ -36,18 +36,18 @@ int main(int argc, char** argv)
   vector <fjcore::PseudoJet> fjInputs; 
   fjcore::Selector select_pt = fjcore::SelectorPtMin(partonpTMin);
 
-  for (int ii = 0; ii < 1; ii++)
+  for (int ii = 0; ii < 8; ii++)
   {
   	  
 	  double scale = scale_list[ii]; 
-	  for (int jj = 0; jj < 2; jj++)
+	  for (int jj = 0; jj < 1; jj++)
 	  {
 	  	double alpha_s = alpha_list[jj]; 
 		for (int kk = 0; kk < 1; kk++)
 		{
 		  double omegacut = omegacut_list[kk]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.dat"); 
-		  std::ofstream jet_output (("../../Result/Tequila/elas/small_coupling_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_diffusion.txt").c_str()); 
+		  auto reader=make_shared<JetScapeReaderAscii>("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2_3fm.dat"); 
+		  std::ofstream jet_output (("../../../../Result/Tequila2.0/elas/MARTINI_EL_test/200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2_3fm.txt").c_str()); 
 
 		  while (!reader->Finished())
 			{ 
@@ -63,8 +63,9 @@ int main(int argc, char** argv)
 			  double energy = 0.; 
 			  for (unsigned int i = 0; i < partons.size(); i++)
 			  // 	if  (sortedJets[i].e() > energy) energy = sortedJets[i].e(); 
-			   	if  (partons[i]->e() > energy && partons[i]->pid() == 21) energy = partons[i]->e(); 
-			  jet_output << energy << "\n"; 
+			   	if  (partons[i]->e() > energy && partons[i]->pid() == 21)
+					energy = partons[i]->e(); 
+			  if (energy != 0.) jet_output << energy << "\n"; 
 			 }
 		  reader->Close(); 
 		}
