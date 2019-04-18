@@ -49,7 +49,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
 
-  	  double t = 0.3*0.3/alpha_s/alpha_s*3.; 
+  	  double t = 0.3*0.3/alpha_s/alpha_s; 
 	  // double t = 0.01; 
   	  tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
   	  lenthxml->SetText(t);
@@ -87,8 +87,8 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  //auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_Tequila2_3fm.dat").c_str());
-	  auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
+	  auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_inel.dat").c_str());
+	  // auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
 	  jetscape->Add(writer); 
 
 	  time_t start, init; 
@@ -116,19 +116,19 @@ int main(int argc, char** argv)
 
   cout<<endl;
     
-  double muperp_scale_list[8] = {0.5, 1., 2., 5., 10., 15., 20, 30.}; 
+  double muperp_scale_list[1] = {1.}; 
   double alpha_list[1] = {0.3}; 
-  double omegacut_list[1] = {1.}; 
-  for (int i = 0; i < 8; i++)
+  double omegacut_list[3] = {0.5, 1., 2.}; 
+  for (int i = 0; i < 1; i++)
   {
 	  double muperp_scale = muperp_scale_list[i]; 
 	  for (int j = 0; j < 1; j++)
 	  {
 	  	double alpha_s = alpha_list[j]; 
-	  	for (int k = 0; k < 1; k++)
+	  	for (int k = 0; k < 3; k++)
 	  	{
 	  		double omegacut = omegacut_list[k]; 
-	  		RunEvents(muperp_scale, alpha_s, omegacut, 1000000); 
+	  		RunEvents(muperp_scale, alpha_s, omegacut, 100000); 
 	  	}
 	  }
   }

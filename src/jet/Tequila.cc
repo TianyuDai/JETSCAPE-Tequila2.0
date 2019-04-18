@@ -234,16 +234,16 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		// if (process!=none) INFO << BOLDGREEN << "process is " << process; 
       	if (process == none)
       		pVecNew = pVecRest; 
-      	else if (process == gg || process == gq || process == qg || process == qq || process == qqp || process == qqb)
+      	/*else if (process == gg || process == gq || process == qg || process == qq || process == qqp || process == qqb)
       	{
       		omega = Energy_Transfer(pRest, T, process); 
 			// qperp = TransverseMomentum_Transfer(pRest, omega, T, process); 
 			// INFO << BOLDYELLOW << "tilde qperp " << qperp; 
 			qperp = 0.; 
 			// qperp is actually \tilde{q_\perp} here, we should convert it to the real q_\perp. 
-			/*double q2 = omega*omega+qperp*qperp; 
-			double qz = qperp*qperp/(2.*pRest)+omega; 
-			qperp = sqrt(q2 - qz*qz); */
+			//double q2 = omega*omega+qperp*qperp; 
+			//double qz = qperp*qperp/(2.*pRest)+omega; 
+			//qperp = sqrt(q2 - qz*qz); 
 			// INFO << BOLDGREEN << "actual qperp " << qperp; 
 			pVecNew = Momentum_Update(omega, qperp, T, pVecRest); 
 		}
@@ -288,7 +288,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 			else if (process == qqb_split)
 				newId = -1*Id; 
 		}
-      	/*else if (process == gqqg || process == gq_inel_conv)
+      	else if (process == gqqg || process == gq_inel_conv)
       	{ 
       		double r = ZeroOneDistribution(*GetMt19937Generator());
 			if (r < 1./6.) Id = 1;
@@ -303,14 +303,14 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 		{
       		Id = 21; 
       		pVecNew = pVecRest;  
-      	}
+      	}*/
       	else if (process == ggg)
       	{ 
       		if (pRest/T < AMYpCut) return;
 			// WARN << process; 
     		// sample radiated parton's momentum
     		sample_dgamma_dwdq(pRest, T,differential_rate_ggg_p_omega_qperp, omega, qperp);
-    		kRest = omega*T; 
+    		kRest = omega; 
         	if(kRest > pRest) return;
 
     		// final state parton's momentum
@@ -329,7 +329,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 
 			// sample radiated parton's momentum
 			sample_dgamma_dwdq(pRest, T,differential_rate_gqq_p_omega_qperp, omega, qperp);		
-			kRest = omega*T; 
+			kRest = omega; 
         	if(kRest > pRest) return;
 
 			// final state parton's momentum
@@ -358,7 +358,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 
 			// sample radiated parton's momentum
 			sample_dgamma_dwdq(pRest, T,differential_rate_qqg_p_omega_qperp, omega, qperp);		
-			kRest = omega*T; 
+			kRest = omega; 
 			//kRest = getNewMomentumRad(pRest, T, process);
         	if(kRest > pRest) return;
 
@@ -371,7 +371,7 @@ void Tequila::DoEnergyLoss(double deltaT, double Time, double Q2, vector<Parton>
 
 			kVec.Set( (pxRest/pRest)*kRest, (pyRest/pRest)*kRest, (pzRest/pRest)*kRest, kRest );
 			newId = 21; 
-		}*/
+		}
 		else pVecNew = pVecRest; 
       	// pVecNew = pVecRest; 
       	pVecNewest = Langevin_Update(deltaTRest / hbarc, T, pVecNew, Id); 
@@ -449,9 +449,9 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 	if (std::abs(Id) == 1 || std::abs(Id) == 2 || std::abs(Id) == 3)
 	{
 		double totalQuarkProb = 0.; 
-		/*if (pRest/T > AMYpCut)
-			totalQuarkProb += rate[qqg]*dt;*/
-		totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb]/* + rate[qggq] + rate[qg_inel_conv]*/ + rate[qg_split] + rate[qq_split] + rate[qqp_split] + rate[qqb_split]) * dt; 
+		if (pRest/T > AMYpCut)
+			totalQuarkProb += rate[qqg]*dt;
+		// totalQuarkProb += (rate[qg] + rate[qq] + rate[qqp] + rate[qqb]/* + rate[qggq] + rate[qg_inel_conv]*/ + rate[qg_split] + rate[qq_split] + rate[qqp_split] + rate[qqb_split]) * dt; 
 		// warn if total probability exceeds 0.1
 		if (totalQuarkProb > 0.2)
       		WARN << " : Total Probability for quark processes exceeds 0.2 (" << totalQuarkProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 	
@@ -463,12 +463,12 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   		
   		if (randProb < totalQuarkProb)
   		{
-  			Prob = rate[qg] * dt; 
+  			/*Prob = rate[qg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg; 
   			
   			accumProb += Prob; 
   			Prob = rate[qq] * dt; 
-  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qq; 
+  			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qq;
 
 			accumProb += Prob; 
   			Prob = rate[qqp] * dt; 
@@ -478,18 +478,18 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			Prob = rate[qqb] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qqb; 
   			
-  			/*accumProb += Prob; 
+  			accumProb += Prob; 
   			Prob = rate[qggq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qggq; 
 
 			accumProb += Prob; 
   			Prob = rate[qg_inel_conv] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg_inel_conv; 
-  			
+  			*/
   			accumProb += Prob; 
   			Prob = rate[qqg] * dt; 
-  			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; */
-
+  			if (pRest/T > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return qqg; 
+/*
 			accumProb += Prob; 
 			Prob = rate[qg_split] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qg_split; 
@@ -505,17 +505,17 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
 			accumProb += Prob; 
   			Prob = rate[qqb_split] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return qqb_split; 
-  		}
+*/  		}
   		else
   			return none; 
   	}
   	else if (Id == 21)
   	{
   		double totalGluonProb = 0.; 
-  		/*if (pRest/T > AMYpCut) 
-			totalGluonProb += (rate[gqq] + rate[ggg])*dt;*/
+  		if (pRest/T > AMYpCut) 
+			totalGluonProb += (rate[gqq] + rate[ggg])*dt;
 		// WARN << totalGluonProb; 
-  		totalGluonProb += (rate[gg] + rate[gq]/* + rate[gqqg] + rate[gq_inel_conv]*/ + rate[gg_split] + rate[gq_split]) * dt; 
+  		// totalGluonProb += (rate[gg] + rate[gq]/* + rate[gqqg] + rate[gq_inel_conv]*/ + rate[gg_split] + rate[gq_split]) * dt; 
 		if (totalGluonProb > 0.2)
   			WARN << " : Total Probability for gluon processes exceeds 0.2 (" << totalGluonProb << "). " << " : Most likely this means you should choose a smaller deltaT in the xml (e.g. 0.01)."; 
   		
@@ -526,29 +526,29 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   		
   		if (randProb < totalGluonProb)
   		{
-  			Prob = rate[gg] * dt; 
+  			/*Prob = rate[gg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gg; 
   			
   			accumProb += Prob; 
   			Prob = rate[gq] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq; 
   			
-  			/*accumProb += Prob; 
+  			accumProb += Prob; 
   			Prob = rate[gqqg] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gqqg; 
 
 			accumProb += Prob; 
   			Prob = rate[gq_inel_conv] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq_inel_conv; 
-  			
+  			*/
   			accumProb += Prob; 
   			Prob = rate[ggg] * dt; 
   			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return ggg; 
 
 			accumProb += Prob; 
   			Prob = rate[gqq] * dt; 
-  			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return gqq; */
-
+  			if (pRest > AMYpCut && accumProb <= randProb && randProb < (accumProb + Prob)) return gqq; 
+/*
 			accumProb += Prob; 
 			Prob = rate[gg_split] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gg_split; 
@@ -556,7 +556,7 @@ process_type Tequila::DetermineProcess(double pRest, double T, double deltaTRest
   			accumProb += Prob; 
   			Prob = rate[gq_split] * dt; 
   			if (accumProb <= randProb && randProb < (accumProb + Prob)) return gq_split; 
-		}
+*/		}
   		else return none; 
   	}
   	return none; 
@@ -589,7 +589,7 @@ double Tequila::qpara(double E, double T, int id)
 	double mD = sqrt(std::pow(g*T, 2)*(nc/3. + nf/6.)); 
 	// double mD = sqrt(std::pow(g*T, 2)*nc/3.); 
 	double Minf = sqrt(pow(mD, 2)/2.); 
-	return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.; 
+	return /*std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(1.+pow(muperp*T/Minf, 2))/2.; 
 	// 		+ */std::pow(g, 4)*CR*CA*std::pow(T, 3)*omega_over_T_cutoff*(2-ln2)/(4.*std::pow(M_PI, 3));
 	// return std::pow(g*Minf, 2)*CR*T/(2.*M_PI)*log(muperp*T/Minf);
 }
