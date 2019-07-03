@@ -41,7 +41,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 {
 	//modify the init.xml file
   	  // JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
-	  JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
+	  JetScapeXML::Instance()->OpenXMLFile("./init.xml");
   	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("mu_scale"); 
   	  scalexml->SetText(scale);
   	  tinyxml2::XMLElement *alphaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("alpha_s");

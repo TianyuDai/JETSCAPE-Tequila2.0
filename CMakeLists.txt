@@ -396,8 +396,8 @@ target_link_libraries(JetScapeReader JetScapeThird GTL ${PYTHIA8_LIBRARIES})
 
 ### Run Jetscape
 
-add_executable(Langevin_Boltzmann ./Tequila_test/Langevin_Boltzmann.cc)
-target_link_libraries(Langevin_Boltzmann JetScape )
+add_executable(Tequila_eventgen ./Tequila_test/Tequila_eventgen.cc)
+target_link_libraries(Tequila_eventgen JetScape )
 
 add_executable(TrentoPythia ./Tequila_test/TrentoPythia.cc)
 target_link_libraries(TrentoPythia JetScape )
@@ -458,7 +458,7 @@ endif (music AND iSS )
 
 # -----------------------------------------------------------
 #### copy jetscape_init.xml to build/, such that one can test xml reading in build/ directory
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Tequila_test/Langevin_Boltzmann.xml DESTINATION ${CMAKE_BINARY_DIR}/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Tequila_test/init.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Tequila_test/TrentoPythia.xml DESTINATION ${CMAKE_BINARY_DIR}/)
 
 #### copy essential files for MUSIC to build/
