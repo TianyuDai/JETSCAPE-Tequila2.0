@@ -60,7 +60,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  dtxml->SetText(deltaT);
   	  
 	  // auto jetscape = make_shared<JetScape>("./Langevin_Boltzmann.xml",N);
-	  auto jetscape = make_shared<JetScape>("./Langevin_Boltzmann.xml",N);
+	  auto jetscape = make_shared<JetScape>("./init.xml",N);
 	  jetscape->SetReuseHydro(true); 
 	  jetscape->SetNReuseHydro(1000000); 
 	  // jetscape->SetId("primary");
