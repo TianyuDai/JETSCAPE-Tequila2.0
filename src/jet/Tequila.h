@@ -24,7 +24,7 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
    	double muperp; 
    	double mu_scale; 
    	// AMY rates are calculated in p/T > AMYpCut
-  	static constexpr double AMYpCut = 4.01;
+  	static constexpr double AMYpCut = 0.1;
 
   	double Q0;
   	double alpha_EM;
@@ -46,9 +46,9 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 
 	// gg, gq, qg, qq, qqp, qqb
 	// const static size_t nSplittingProcess = 9; 
-	double splitting_c_lambda[nElasProcess] = {8.*CA*CA, 16.*CA, 4.*CF*CA, 16.*CF, 16.*CF, 16.*CF}; 
-	double splitting_c_p[nElasProcess] = {5./3*CA*CA, 2.*CF-4.*CA, CF*CF/2-CF*CA, -4.*CF, -4.*CF, 4.*CF*(6.*CF-3.*CA-1./3)}; 
-	double splitting_c_ln[nElasProcess] = {-4.*CA*CA, 4.*CF-8.*CA, CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF, -8.*CF*(2.*CF-CA+1.)}; 
+	double splitting_c_lambda[nElasProcess] = {4.*CA*CA, 16.*CA, 4.*CF*CA, 16.*CF, 16.*CF, 16.*CF}; 
+	double splitting_c_p[nElasProcess] = {5./6*CA*CA, 2.*CF-4.*CA, CF*CF/2-CF*CA, -4.*CF, -4.*CF, 4.*CF*(6.*CF-3.*CA-1./3)}; 
+	double splitting_c_ln[nElasProcess] = {-2.*CA*CA, 4.*CF-8.*CA, CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF, -8.*CF*(2.*CF-CA+1.)}; 
 	struct tables
 	{
 		double rate = 0.; 
@@ -139,7 +139,9 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 	double Interpolator_dGamma_domega(double omega, process_type process); 
 	double Extrapolator_dGamma_domega(double omega, process_type process); 
 	double Interpolator_dGamma_domega_qperp(double omega, double qperp, process_type process); 
-	double splittingF(double x, process_type process); 
+	double splittingF(double x, process_type process);
+        double splitting_gg1(double x); 
+        double splitting_gg2(double x);  
 	double splittingRateOmega(double pRest, double x, double T, process_type process); 
 	// double splittingRateQperp(double pRest, double qperp, double omega, double T, process_type process); 
 

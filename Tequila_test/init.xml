@@ -53,7 +53,7 @@
     <!-- Parton Gun test with fixed pT and fixed IS pos = 0  -->
     <PGun>
       <name>PGun</name>
-      <pT>200</pT>
+      <pT>100</pT>
     </PGun>
 
     <!-- Pythia Gun -->
@@ -124,7 +124,7 @@
       <name> Tequila </name>
       <alpha_s> 0.3 </alpha_s>
       <mu_scale> 1. </mu_scale>
-      <pcut> 20. </pcut>
+      <pcut> 0.1 </pcut>
       <mass> 0 </mass>
       <Q0> 1.0 </Q0>
       <hydro_Tc> 0.16 </hydro_Tc>

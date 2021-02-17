@@ -1,5 +1,6 @@
 # ignore the build repository
 build
+build2
 
 # ignore the large file
 external_packages/hydro_events/lhc_2030/evolution_xyeta.dat

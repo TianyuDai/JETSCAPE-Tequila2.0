@@ -40,7 +40,9 @@ static double fmToGeVinv = 5.0;
 
 static double zeta3 = 1.20206;
 
-static double mu = 0.722;
+static double mu = 0.722; 
+
+static double pcut = 2.; 
 
 /* When the code becomes really accurate, a more accurate value for this can be used  */
 

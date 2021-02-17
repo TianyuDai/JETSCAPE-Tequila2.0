@@ -39,7 +39,7 @@ void Show();
 
 void RunEvents(double scale, double alpha_s, double omegacut, int N)
 {
-	//modify the init.xml file
+	  //modify the init.xml file
   	  // JetScapeXML::Instance()->OpenXMLFile("./Langevin_Boltzmann.xml");
 	  JetScapeXML::Instance()->OpenXMLFile("./init.xml");
   	  tinyxml2::XMLElement *scalexml=JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("mu_scale"); 
@@ -49,13 +49,15 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
   	  tinyxml2::XMLElement *omegaxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("Tequila" )->FirstChildElement("omega_over_T_cutoff");
   	  omegaxml->SetText(omegacut); 
 
-  	  // double t = 0.3*0.3/alpha_s/alpha_s; 
-	  double t = 0.01; 
+  	  double t = 0.3*0.3/alpha_s/alpha_s*0.01; 
+	  // double t = 1.; 
   	  tinyxml2::XMLElement *lenthxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("maxT" );
   	  lenthxml->SetText(t);
 	  // JetScapeXML::Instance()->CloseXMLFile();
 	  
-	  double deltaT = 0.01; 
+	  double deltaT = 0.01*0.3*0.3/alpha_s/alpha_s; 
+	  // double deltaT = 0.01; 
+	  // if (abs(alpha_s - 0.00001) < 1e-6) deltaT /= 100;  
 	  tinyxml2::XMLElement *dtxml= JetScapeXML::Instance()->GetXMLRoot()->FirstChildElement("Eloss" )->FirstChildElement("deltaT" );
   	  dtxml->SetText(deltaT);
   	  
@@ -87,7 +89,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  // auto writer= make_shared<JetScapeWriterAscii> (("200GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_fixed_qperp.dat").c_str());
+	  // auto writer= make_shared<JetScapeWriterAscii> (("100GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas.dat").c_str());
 	  auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
 	  jetscape->Add(writer); 
 
@@ -116,7 +118,7 @@ int main(int argc, char** argv)
 
   cout<<endl;
     
-  double muperp_scale_list[1] = {0.1}; 
+  double muperp_scale_list[1] = {1.}; 
   double alpha_list[1] = {0.3}; 
   double omegacut_list[1] = {1.}; 
   for (int i = 0; i < 1; i++)

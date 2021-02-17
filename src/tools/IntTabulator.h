@@ -7,18 +7,18 @@
 // qqb is qqbar->qqbar, qqp is qq'->qq', qqbp is qqbar->q'qbar', qqbgg is qqbar->gg
 // gq_inel_conv and qg_inel_conv are conversion processes of inelasic part. 
 
-const int CA = 3; 
-const int dA = 8; 
+const double CA = 3.; 
+const double dA = 8.; 
 const double CF = 4./3.; 
-const int dF = 3; 
+const double dF = 3.; 
 
 const static size_t Nw = 1000; // number of sites in omega grid in tabulator
 const static size_t Nq = 1000; 
 
 const double wMax = 64.; 
 const double omegaMin = -1.*wMax/2.; 
-const double qperpMax = 2*sqrt(wMax*wMax+wMax*omegaMin); 
-const double muperp0 = 0.1; 
+const double qperpMax = 2.*sqrt(wMax*wMax+wMax*omegaMin); 
+const double muperp0 = 0.0005; 
 
 enum process_type {gg, gq, qg, qq, qqp, qqb, ggg, gqq, qqg, gqqg, qggq, gq_inel_conv, qg_inel_conv, gg_split, gq_split, qg_split, qq_split, qqp_split, qqb_split, none}; 
 	

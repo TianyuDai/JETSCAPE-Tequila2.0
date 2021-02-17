@@ -108,16 +108,19 @@ double dGamma_domega_qperp_k_phi_gg(double phi, void *params)
 	IntTabulator cls; 
 	double s, t, u, M2, C; 
 	double q, k, kp, qperp, omega; 
-	qperp = p->f_qperp; 
+	qperp = p->f_qperp;
 	k = p->f_k; 
 	omega = p->f_omega;  
 	kp = k + omega; 
 	q = sqrt(qperp*qperp + omega*omega); 
 	t = -1.*pow(qperp, 2); 
-	s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	// s = (-1.*t/(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
+	s = (-1./(2*q*q))*((k+kp)-cos(phi)*sqrt(4*k*kp+t)); 
 	u = -1.*s; 
 	C = 1./4./pow(2.*M_PI, 3)*qperp/q; 
-	M2 = (double)(CA*CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
+	// M2 = (double)(CA*CA)*2.*(pow(s, 2)+pow(u, 2))/pow(t, 2)*(2.*nB(k)*(1+nB(k+omega))); 
+	M2 = (double)(CA*CA)*2.*(pow(s, 2)+pow(u, 2))*(2.*nB(k)*(1+nB(k+omega))); 
+	// std::cout << omega << " " << qperp << " " << C << " " << M2 << " " << C*M2 << "\n"; 
 	return C*M2; 
 }
 
