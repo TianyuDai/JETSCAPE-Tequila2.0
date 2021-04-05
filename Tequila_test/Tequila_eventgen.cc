@@ -89,7 +89,7 @@ void RunEvents(double scale, double alpha_s, double omegacut, int N)
 	  jetscape->Add(printer);
 	  
 	  // Output
-	  // auto writer= make_shared<JetScapeWriterAscii> (("100GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas.dat").c_str());
+	  // auto writer= make_shared<JetScapeWriterAscii> (("5GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_addConv.dat").c_str());
 	  auto writer= make_shared<JetScapeWriterAscii> ("test_out.dat");
 	  jetscape->Add(writer); 
 

@@ -124,7 +124,7 @@
       <name> Tequila </name>
       <alpha_s> 0.3 </alpha_s>
       <mu_scale> 1. </mu_scale>
-      <pcut> 0.1 </pcut>
+      <pcut> 2. </pcut>
       <mass> 0 </mass>
       <Q0> 1.0 </Q0>
       <hydro_Tc> 0.16 </hydro_Tc>

@@ -27,7 +27,7 @@ using namespace Jetscape;
 int main(int argc, char** argv)
 {
   double scale_list[1] = {1.}; 
-  double alpha_list[2] = {0.00001, 0.3}; 
+  double alpha_list[1] = {0.3}; 
   double omegacut_list[1] = {1.}; 
 
   double jetpTMin = 20., jetRadius = 0.4, partonpTMin = 20.; 
@@ -40,15 +40,15 @@ int main(int argc, char** argv)
   {
   	  
 	  double scale = scale_list[ii]; 
-	  for (int jj = 0; jj < 2; jj++)
+	  for (int jj = 0; jj < 1; jj++)
 	  {
 	  	double alpha_s = alpha_list[jj]; 
 		for (int kk = 0; kk < 1; kk++)
 		{
 		  double omegacut = omegacut_list[kk]; 
-		  auto reader=make_shared<JetScapeReaderAscii>("100GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas.dat"); 
+		  auto reader=make_shared<JetScapeReaderAscii>("5GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+std::to_string(omegacut)+"_qgpbrick_elas_addConv.dat"); 
  		  // std::cout << "100GeV_gluon_muscale"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"omega"+    std::to_string(omegacut)+"_qgpbrick_elas_put1.dat\n"; 
-		  std::ofstream jet_output (("../../../../Result/JETSCAPE2.0/inel/general_test/100GeV_gluon_muqperp"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"muomega"+std::to_string(omegacut)+"_qgpbrick_elas_JETSCAPE1.0.txt").c_str()); 
+		  std::ofstream jet_output (("../../../../Result/Tequila2.0/elas/Toverp_test/compare/5GeV_gluon_muqperp"+std::to_string(scale)+"alpha"+std::to_string(alpha_s)+"muomega"+std::to_string(omegacut)+"_1fm_QGP_elas_addConv.txt").c_str()); 
 
 		  while (!reader->Finished())
 		  { 
@@ -65,13 +65,21 @@ int main(int argc, char** argv)
 			  double energy = 0.; 
 			  double px;
 			  double py; 
-			  double pz;  
+			  double pz; 
+                          int id; 
+                          int stat;  
 			  for (unsigned int i = 0; i < partons.size(); i++)
 			  {
 			   	// if  (partons[i]->e() > energy && partons[i]->pid() == 21) {energy = partons[i]->e(); pT = partons[i]->pt(); px = partons[i]->px(); py = partons[i]->py(); pz = partons[i]->pz(); } 
 			   	// if  (partons[i]->pt() > pT && partons[i]->pid() == 21)
-				//	pT = partons[i]->pt(); 
-				if (abs(partons[i]->e() - 0.) > 1e-5) jet_output << partons[i]->e() << "\n"; 
+				//	pT = partons[i]->pt();
+				px = partons[i]->px(); 
+                                py = partons[i]->py(); 
+                                id = partons[i]->pid(); 
+                                stat = partons[i]->pstat(); 
+                                energy = partons[i]->e(); 
+				if (abs(partons[i]->e() - 0.) > 1e-5)// jet_output << partons[i]->e() << "\n"; 
+                                    jet_output << "energy: " << energy << ", px: " << px << ", py: " << py << ", id: " << id << ", stat: " << stat << endl; 
 			  }
 			  // if (energy != 0.) jet_output << energy << "\n"; 
 		  }

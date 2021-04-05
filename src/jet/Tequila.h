@@ -36,28 +36,36 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 	const double ln2 = log(2); 
 
 	const int Nsteps = 500; 
-	const static size_t nElasProcess = 6; 
-	const static size_t nTotalProcess = 20; 
+	const static size_t nElasProcess = 6;
+        const static size_t nConvProcess = 4;  
+        const static size_t nSplitProcess = 8;
+        const static size_t nInelProcess = 3;  
+	const static size_t nTotalProcess = nElasProcess + nConvProcess + nSplitProcess + nInelProcess; 
+	std::string ProcessStrings[nTotalProcess] = {"gg", "gq", "qg", "qq", "qqp", "qqb", "GqQg", "QgGq", "GgQbq", "QbqGg", "ggg", "gqq", "qqg", "gg_split", "gq_split", "qq_split", "qqp_split", "qqb_split", "ggqbq_split", "qbqgg_split", "none"}; 
 	
 	int iqperp0 = 0; 
+	int iqperp0_w = 0; 
 	double max_omega_rate; 
 	double max_qperp_rate; 
-	double casimir[nElasProcess] = {CA*CA/(24.*M_PI), dF*CF*CA/dA/(8.*M_PI), CF*CA/(24.*M_PI), dF*CF*CF/dA/(72.*M_PI), dF*CF*CF/dA/(18.*M_PI), dF*CF*CF/dA/(72.*M_PI)};		// The coefficient for total rate integration of large omega
+	double casimir[nElasProcess] = {CA*CA/(24.*M_PI), dF*CF*CA/dA/(8.*M_PI), CF*CA/(24.*M_PI), dF*CF*CF/dA/(48.*M_PI), dF*CF*CF/dA/(12.*M_PI), dF*CF*CF/dA/(48.*M_PI)};		// The coefficient for total rate integration of large omega
 
 	// gg, gq, qg, qq, qqp, qqb
 	// const static size_t nSplittingProcess = 9; 
-	double splitting_c_lambda[nElasProcess] = {4.*CA*CA, 16.*CA, 4.*CF*CA, 16.*CF, 16.*CF, 16.*CF}; 
-	double splitting_c_p[nElasProcess] = {5./6*CA*CA, 2.*CF-4.*CA, CF*CF/2-CF*CA, -4.*CF, -4.*CF, 4.*CF*(6.*CF-3.*CA-1./3)}; 
-	double splitting_c_ln[nElasProcess] = {-2.*CA*CA, 4.*CF-8.*CA, CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF, -8.*CF*(2.*CF-CA+1.)}; 
+	double splitting_c_lambda[nSplitProcess] = {4.*CA*CA, 16.*CA*2.*nf, 4.*CF*CA, 16.*CF, 16.*CF*(2.*nf-2.), 16.*CF, 0, 0}; 
+	double splitting_c_p[nSplitProcess] = {5./6*CA*CA, 2.*nf*(2.*CF-4.*CA), CF*CF/2-CF*CA, -4.*CF, -4.*CF*(2.*nf-2), 4.*CF*(6.*CF-3.*CA-1./3), nf*(-CA/3-CF), -8.*CF/3*(CA+3.*CF)}; 
+	double splitting_c_ln[nSplitProcess] = {-2.*CA*CA, 2.*nf*(4.*CF-8.*CA), CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF*(2.*nf-2.), -8.*CF*(2.*CF-CA+1.), nf*CF, 8.*CF}; 
+	double Toverp_c_ln[nElasProcess+nConvProcess] = {-2.*CA*CA, -CA*CA, -2.*CF*CA, CF*(2.*CF-CA-1.), -CF, -CF*(2.*CF-CA+1.), -2.*nf*CF*CF/2, -CF*CF, -2.*nf*CF*CF, -CF*CF/2};
+        // double soft_conversion[] 
 	struct tables
 	{
 		double rate = 0.; 
+		double ratew = 0.; 
 		double x[Nw+1], y[Nw+1]; 
 		double xa[Nw+1], ya[Nq+1]; 
 		double rate_qperp[Nw+1][Nq+1];  
 	}; 
 	vector <tables> elasticTable; 
-	double *za = (double*) malloc(nElasProcess * (Nw+1) * (Nq+1) * sizeof(double)); 
+	double *za = (double*) malloc((nElasProcess+nSplitProcess) * (Nw+1) * (Nq+1) * sizeof(double)); 
 	// double *za = new double(nElasProcess * (Nw+1) * (Nq+1)); 
 
 	bool is_empty(std::ifstream& pFile); 
