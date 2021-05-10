@@ -55,7 +55,6 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 	double splitting_c_p[nSplitProcess] = {5./6*CA*CA, 2.*nf*(2.*CF-4.*CA), CF*CF/2-CF*CA, -4.*CF, -4.*CF*(2.*nf-2), 4.*CF*(6.*CF-3.*CA-1./3), nf*(-CA/3-CF), -8.*CF/3*(CA+3.*CF)}; 
 	double splitting_c_ln[nSplitProcess] = {-2.*CA*CA, 2.*nf*(4.*CF-8.*CA), CF*CF-2.*CF*CA, 8.*CF*(2.*CF-CA-1.), -8.*CF*(2.*nf-2.), -8.*CF*(2.*CF-CA+1.), nf*CF, 8.*CF}; 
 	double Toverp_c_ln[nElasProcess+nConvProcess] = {-2.*CA*CA, -CA*CA, -2.*CF*CA, CF*(2.*CF-CA-1.), -CF, -CF*(2.*CF-CA+1.), -2.*nf*CF*CF/2, -CF*CF, -2.*nf*CF*CF, -CF*CF/2};
-        // double soft_conversion[] 
 	struct tables
 	{
 		double rate = 0.; 
@@ -118,12 +117,12 @@ class Tequila : public JetEnergyLossModule<Tequila> //, public std::enable_share
 	void load_differential_rate(const double alpha_s, const double alpha_EM, const int Nf, const std::string location_of_collinear_rates);
 	// fill member array "rate_p" by integrating the content of "differential_rate_p_omega_q"
 	//void evaluate_integrated_rate(double omegaMin);
-	void evaluate_integrated_rate(double omega_over_T_cutoff, double *** differential_rate_gqq_p_omega_qperp, double * rate_gqq_p);
+	void evaluate_integrated_rate(double omega_over_T_cutoff, double *** differential_rate_gqq_p_omega_qperp, double * rate_gqq_p, process_type process);
 
 	//  double differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T);
 	double differential_rate(const double p_over_T, const double omega_over_T, const double qperp_over_T, double *** differential_rate_p_omega_qperp);
 	double rate_inel(double energy, double temp, double * rate_p);
-	void sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q);
+	void sample_dgamma_dwdq(double p, double T, double *** differential_rate_p_omega_qperp, double &w, double &q, process_type process);
 	//  void sample_dgamma_dwdq(const struct ERateParam &pp, const Pythia8::Vec4 &p0, double (*rng)(void*params), void *params,  double &w, double &q);
 	//
 	//educated guess on the highest value of the rate
